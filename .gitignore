@@ -1,0 +1,13 @@
+# Ignore local configuration files (path history)
+folders_path.json
+
+# Ignore Python Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore venvs.
+.venv/
+venv/
+env/
