@@ -6,22 +6,11 @@ from pathlib import Path
 
 # TODO - Remember to call functions from converter, downloader and generate
 from scripts.converter import check_format
+from scripts.downloader import check_url
 from config import create_folders_path, read_path, update_path
 
-def file_path_choice():
-    os.system("cls" if os.name == "nt" else "clear")
-    print("--- Choice Image ---")
-
-    paths = read_path("IMAGE_PATH")
-    paths_list = [Choice(value=x, name=x) for x in paths]
-    paths_list.append(Choice(value="Another", name="> Choice another path."))
- 
-    default_path = inquirer.select(
-        message="Choice a Default Path!",
-        choices=paths_list
-    ).execute()
-
-    current_path_directory = default_path if default_path != "Another" else os.path.expanduser("~")
+def path_image_choice(path):
+    current_path_directory = path
 
     while True:
         file_path = inquirer.filepath(
@@ -39,14 +28,59 @@ def file_path_choice():
         elif os.path.isdir(file_path):
             current_path_directory = file_path
             os.system("cls" if os.name == "nt" else "clear")
+    return current_path_directory
+
+def default_path_choice(default: str):
+    path_name = default.replace("_", " ").title()
+
+    os.system("cls" if os.name == "nt" else "clear")
+    print("--- Choice Path ---")
+
+    paths = read_path(default)
+    paths_list = [Choice(value=x, name=x) for x in paths]
+    paths_list.append(Choice(value="Another", name="> Choice another path."))
+ 
+    default_path = inquirer.select(
+        message=f"Choice a Default {path_name}!",
+        choices=paths_list
+    ).execute()
+
+    functions_call = {
+        "Download Path": None,
+        "Image Path": path_image_choice,
+        "Str Path": None
+    }
+
+    if default_path != "Another":
+        return default_path 
+    else:
+        action_fuction = functions_call.get(path_name)
+
+        if action_fuction is not None:
+            return action_fuction(os.path.expanduser("~"))
+        else:
+            pass
+            # TODO - handle the error!
 
 def media_downloader():
     print("--- Media Downloader ---")
-    file_path = file_path_choice()
+    file_path = default_path_choice("DOWNLOAD_PATH")
+
+    type_list = ["mp3", "mp4", "wav"]
+    checked_url = None
+
+    while True:
+        url = str(input("Enter a URL: "))
+        
+        if check_url(url):
+            checked_url = url
+            break
+        else:
+            print("Error: Invalid URL or not supported by yt-dlp. Try again.")
 
 def image_converter():
     print("--- Image Converter ---")
-    file_path = file_path_choice()
+    file_path = default_path_choice("IMAGE_PATH")
 
     types_list = ["PNG", "JPEG", "JPG", "WEBP"]
     file_format_list = [Choice(value=x, name=x) for x in types_list]
