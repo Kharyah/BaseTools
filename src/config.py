@@ -1,14 +1,7 @@
 import json
 from pathlib import Path
 
-# -------------------------------------------------------------------------
-# If you cloned this repo, do yourself a favor and go listen to 
-# "Deixa escondido" (sped up or original) by Vitux.
-# Honestly? The lyrics might be a bit "meh" or questionable, but the 
-# beat and the vibe are absolute gold. Just vibe with it, don't overthink it.
-# -------------------------------------------------------------------------
-
-JSON_FILE = Path("src/folders_path.json")
+JSON_FILE = Path("data/folders_path.json")
 
 def create_folders_path():
     global JSON_FILE

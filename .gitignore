@@ -1,5 +1,5 @@
 # Ignore local configuration files (path history)
-folders_path.json
+data/
 
 # Ignore Python Caches
 __pycache__/

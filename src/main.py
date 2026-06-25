@@ -5,49 +5,50 @@ from InquirerPy.base.control import Choice
 from pathlib import Path
 
 # TODO - Remember to call functions from converter, downloader and generate
+from scripts.converter import check_format
 from config import create_folders_path, read_path, update_path
 
 def file_path_choice():
     os.system("cls" if os.name == "nt" else "clear")
     print("--- Choice Image ---")
 
-    current_path_directory = os.path.expanduser("~")
-
     paths = read_path("IMAGE_PATH")
     paths_list = [Choice(value=x, name=x) for x in paths]
     paths_list.append(Choice(value="Another", name="> Choice another path."))
-
+ 
     default_path = inquirer.select(
         message="Choice a Default Path!",
         choices=paths_list
     ).execute()
 
-    if default_path == "Another":
-        while True:
-            file_path = inquirer.filepath(
-                message="Choice the Image File!",
-                default=current_path_directory,
-            ).execute()
+    current_path_directory = default_path if default_path != "Another" else os.path.expanduser("~")
 
-            if not file_path:
-                break
+    while True:
+        file_path = inquirer.filepath(
+            message="Choice the Image File!",
+            default=str(current_path_directory),
+            validate=check_format
+        ).execute()
+
+        if not file_path:
+            break
             
-            if os.path.isfile(file_path):
-                return file_path
+        if os.path.isfile(file_path):
+            return file_path
 
-            elif os.path.isdir(file_path):
-                current_path_directory = file_path
-                os.system("cls" if os.name == "nt" else "clear")
-    return default_path
+        elif os.path.isdir(file_path):
+            current_path_directory = file_path
+            os.system("cls" if os.name == "nt" else "clear")
 
 def media_downloader():
-    pass
-
-def image_converter():
-    print("\n--- Image Converter ---")
+    print("--- Media Downloader ---")
     file_path = file_path_choice()
 
-    types_list = ["PNG", "JPEG", "WEBP"]
+def image_converter():
+    print("--- Image Converter ---")
+    file_path = file_path_choice()
+
+    types_list = ["PNG", "JPEG", "JPG", "WEBP"]
     file_format_list = [Choice(value=x, name=x) for x in types_list]
     file_format_list.append(Choice(value="Return", name="Return"))
 
@@ -96,6 +97,12 @@ def main():
 
 if __name__ == "__main__":
     os.system("cls" if os.name == "nt" else "clear")
-    create_folders_path() # Criando o arquivo json
+    create_folders_path() # Creating/checking the json file
 
     main()
+
+    # TODO - Check if the code arguments are good -> Setup it if not
+    # TODO - Check if main.py and config.py is good to be in src and if scripts its a good name
+    # TODO - Setup download def and str_generator.
+    # str generator -> choice file, choice default modes and call fuction
+    # download -> choice folder to save -> input the url -> choice mode (mp3, wav or mp4) always download in best format.
