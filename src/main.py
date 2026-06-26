@@ -1,13 +1,16 @@
 import os
+import logging
 
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from pathlib import Path
 
-# TODO - Remember to call functions from converter, downloader and generate
 from scripts.converter import check_format
 from scripts.downloader import check_url
-from config import create_folders_path, read_path, update_path
+from config import create_folders_path, read_path, update_path, start_logging
+
+start_logging()
+logger = logging.getLogger("Main")
 
 def path_image_choice(path):
     current_path_directory = path
@@ -73,6 +76,7 @@ def media_downloader():
         url = str(input("Enter a URL: "))
         
         if check_url(url):
+            # TODO - Check if the fuction is working
             checked_url = url
             break
         else:
@@ -123,6 +127,7 @@ def main():
 
         if user_choice in call_functions.keys():
             call_functions[user_choice]()
+
         else:
             print("Closing...")
             break
@@ -131,7 +136,9 @@ def main():
 
 if __name__ == "__main__":
     os.system("cls" if os.name == "nt" else "clear")
+
     create_folders_path() # Creating/checking the json file
+    logging.info("Fuctions 'create_folder_path' execute successful.")
 
     main()
 

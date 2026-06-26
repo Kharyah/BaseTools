@@ -1,4 +1,7 @@
 import yt_dlp
+import logging
+
+logger = logging.getLogger("Downloader")
 
 def check_url(url: str):
     ydl_opts = {
@@ -11,5 +14,6 @@ def check_url(url: str):
         try:
             ydl.extract_info(url, download=False)
             return True
-        except Exception:
+        except Exception as exc:
+            logging.error(f"Error: {exc}")
             return False

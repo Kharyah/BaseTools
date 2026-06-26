@@ -1,6 +1,9 @@
 # Ignore local configuration files (path history)
 data/
 
+# Igonre logs files.
+logs/
+
 # Ignore Python Caches
 __pycache__/
 *.pyc

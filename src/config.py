@@ -1,7 +1,23 @@
 import json
+import logging
 from pathlib import Path
 
 JSON_FILE = Path("data/folders_path.json")
+
+def start_logging():
+    project_path = Path(__file__).resolve().parent.parent
+    folder_logs = project_path / "logs"
+
+    folder_logs.mkdir(exist_ok=True)
+    file_log = folder_logs / "app.log"
+    
+    logging.basicConfig(
+        filename=file_log,
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        encoding="utf-8"
+    )
 
 def create_folders_path():
     global JSON_FILE
