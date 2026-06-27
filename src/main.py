@@ -7,7 +7,7 @@ from pathlib import Path
 
 from scripts.converter import check_format
 from scripts.downloader import check_url
-from config import create_folders_path, read_path, update_path, start_logging
+from config.settings import create_folders_path, read_path, update_path, start_logging
 
 start_logging()
 logger = logging.getLogger("Main")
