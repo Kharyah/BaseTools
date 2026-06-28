@@ -1,27 +1,47 @@
 import json
 import logging
+import os
 from pathlib import Path
 
 JSON_FILE = Path("data/folders_path.json")
 
-def start_logging():
-    project_path = Path(__file__).resolve().parent.parent
-    folder_logs = project_path / "logs"
+def get_project_root(anchor: str = "requirements.txt") -> Path:
+    """Finds the project root directory by looking for an anchor file."""
+    current_path = Path(__file__).resolve()
+    for parent in [current_path] + list(current_path.parents):
+        if (parent / anchor).exists():
+            return parent
+    return current_path.parent
 
-    folder_logs.mkdir(exist_ok=True)
-    file_log = folder_logs / "app.log"
+def start_logging():
+    project_root = get_project_root()
+    log_dir = project_root / "logs"
+    log_file = log_dir / "app.log"
     
-    logging.basicConfig(
-        filename=file_log,
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        encoding="utf-8"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # FORCE CLEANUP: Removes any ghost handlers created by rogue imports
+    if root_logger.handlers:
+        root_logger.handlers.clear()
+        
+    formatter = logging.Formatter(
+        fmt='%(asctime)s [%(levelname)s] %(module)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
     )
+    
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    file_handler.setFormatter(formatter)
+    
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)
 
 def create_folders_path():
-    global JSON_FILE
-
     if not JSON_FILE.exists():
         default_paths = {
             "IMAGE_PATH": [

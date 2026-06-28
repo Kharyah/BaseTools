@@ -1,3 +1,7 @@
+from config.settings import start_logging
+
+start_logging()
+
 import os
 import sys
 import logging
@@ -7,12 +11,9 @@ from InquirerPy.base.control import Choice
 from pathlib import Path
 
 from scripts.converter import check_format
-from scripts.downloader import check_url
+from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
-from config.settings import create_folders_path, read_path, update_path, start_logging
-
-start_logging()
-logger = logging.getLogger("Main")
+from config.settings import create_folders_path, read_path, update_path
 
 def clear_terminal():
     """Clears the terminal screen based on the Operating System."""
@@ -22,6 +23,11 @@ def prompt_to_continue():
     if input("Press Enter to continue or 'q' to exit... ").lower() == "q":
         return True
     return False
+
+def create_choice_list(types_list: list):
+    format_list = [Choice(value=x, name=x) for x in types_list]
+
+    return format_list
 
 def path_image_choice(path):
     current_path_directory = path
@@ -81,8 +87,6 @@ def media_downloader():
         return None
 
     file_path = default_path_choice("DOWNLOAD_PATH")
-
-    type_list = ["mp3", "mp4", "wav"]
     checked_url = None
 
     while True:
@@ -101,12 +105,25 @@ def media_downloader():
                 sys.exit(1)
             continue
 
+    file_format_list = create_choice_list(["mp3", "mp4", "wav"])
+    file_format_list.append(Choice(value="Return", name="Return"))
+
+    file_format = inquirer.select(
+        message="Choice The File Format:",
+        choices=file_format_list
+    ).execute()
+    
+    if file_format == "Return":
+        clear_terminal()
+    else:
+        download_media(url=checked_url, output_path=file_path, file_type=file_format)
+        prompt_to_continue()
+
 def image_converter():
     print("--- Image Converter ---")
     file_path = default_path_choice("IMAGE_PATH")
 
-    types_list = ["PNG", "JPEG", "JPG", "WEBP"]
-    file_format_list = [Choice(value=x, name=x) for x in types_list]
+    file_format_list = create_choice_list(["PNG", "JPEG", "JPG", "WEBP"])
     file_format_list.append(Choice(value="Return", name="Return"))
 
     file_format = inquirer.select(
@@ -159,7 +176,7 @@ if __name__ == "__main__":
     clear_terminal()
 
     create_folders_path() # Creating/checking the json file
-    logging.info("Fuctions 'create_folder_path' execute successful.")
+    #logging.info("Fuctions 'create_folder_path' execute successful.")
 
     main()
 
