@@ -10,7 +10,8 @@ from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from pathlib import Path
 
-from scripts.converter import check_format
+from scripts.converter import check_image_format
+from scripts.generate import check_audio_format
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
 from config.settings import create_folders_path, read_path, update_path
@@ -30,13 +31,35 @@ def create_choice_list(types_list: list):
     return format_list
 
 def path_image_choice(path):
+    print("--- Choice Path ---")
     current_path_directory = path
 
     while True:
         file_path = inquirer.filepath(
             message="Choice the Image File!",
             default=str(current_path_directory),
-            validate=check_format
+            validate=check_image_format
+        ).execute()
+
+        if not file_path:
+            break
+            
+        if os.path.isfile(file_path):
+            return file_path
+
+        elif os.path.isdir(file_path):
+            current_path_directory = file_path
+            clear_terminal()
+    return current_path_directory
+
+def path_audio_choice(path):
+    current_path_directory = path
+
+    while True:
+        file_path = inquirer.filepath(
+            message="Choice the Audio File!",
+            default=str(current_path_directory),
+            validate=check_audio_format
         ).execute()
 
         if not file_path:
@@ -71,16 +94,8 @@ def default_path_choice(default: str):
         "Str Path": None
     }
 
-    if default_path != "Another":
-        return default_path 
-    else:
-        action_fuction = functions_call.get(path_name)
-
-        if action_fuction is not None:
-            return action_fuction(os.path.expanduser("~"))
-        else:
-            pass
-            # TODO - handle the error!
+    action_fuction = functions_call.get(path_name)
+    return action_fuction(os.path.expanduser("~") if default_path == "Another" else default_path)
 
 def media_downloader():
     if not check_js_runtime:
@@ -109,7 +124,7 @@ def media_downloader():
     file_format_list.append(Choice(value="Return", name="Return"))
 
     file_format = inquirer.select(
-        message="Choice The File Format:",
+        message="Choice The File Format (It will be the best quality possible):",
         choices=file_format_list
     ).execute()
     
@@ -133,15 +148,24 @@ def image_converter():
 
     if file_format == "Return":
         clear_terminal()
-    else:        
-        new_path = Path(file_path)
-        update_path(path_name="IMAGE_PATH", new_path=new_path.parent)
-
-        # TODO - Create the system to convert the image and save it in the right folder. 
-        # TODO - Maybe think about configuring to save to the same path or if the user chooses another path.
+    else:
+        update_path(path_name="IMAGE_PATH", new_path=Path(file_path))
 
 def srt_generator():
-    pass
+    print("--- SRT Generator ---")
+    file_path = default_path_choice("SRT_PATH")
+
+    srt_mode = create_choice_list([])
+    srt_mode.append(Choice(value="Return", name="Return"))
+
+    if srt_mode == "Return":
+        clear_terminal()
+    else:
+
+
+        update_path(path_name="IMAGE_PATH", new_path=Path(file_path).parent)
+        audio_file = path_audio_choice()
+        
 
 def main():
     clear_terminal()
