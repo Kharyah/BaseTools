@@ -2,8 +2,6 @@ import yt_dlp
 import os
 import logging
 
-logger = logging.getLogger("Downloader")
-
 class MyQuietLogger:
     def debug(self, msg): pass
     def warning(self, msg): pass
@@ -49,15 +47,32 @@ class DownloadLogger:
         logging.error(f"[yt-dlp ERROR] {msg}")
 
 
+def show_progress_percentage(d: dict) -> None:
+    """Calculates and displays only the download percentage in the CLI."""
+    if d.get('status') == 'downloading':
+        total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
+        downloaded_bytes = d.get('downloaded_bytes', 0)
+        
+        if total_bytes > 0:
+            percentage = (downloaded_bytes / total_bytes) * 100
+            print(f"Progress: {percentage:.1f}%", end="\r", flush=True)
+            
+    elif d.get('status') == 'finished':
+        # Prints a newline so the next [SUCCESS] message doesn't overwrite the 100%
+        print()
+
+
 def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
     outtmpl_path = os.path.join(output_path, '%(title)s.%(ext)s')
 
     ydl_opts = {
         'outtmpl': outtmpl_path,
         'remote_components': 'ejs:github',
-        'quiet': False,             # Keep False so the default download progress bar still shows up
-        'no_warnings': True,        # Prevents yt-dlp from printing warnings to stderr/terminal
-        'logger': DownloadLogger(), # Binds our custom logger to intercept messages
+        'quiet': True,              # Desativa a saída padrão de informações
+        'no_warnings': True,        # Oculta os avisos no terminal
+        'noprogress': True,         # FORÇA a desativação da barra nativa em qualquer protocolo (HLS, DASH, etc.)
+        'logger': DownloadLogger(), # Continua desviando os logs para a classe que você criou
+        'progress_hooks': [show_progress_percentage], # Mantém o seu hook de porcentagem
     }
 
     if file_type.lower() == 'mp4':

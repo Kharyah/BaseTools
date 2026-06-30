@@ -14,94 +14,45 @@ from scripts.converter import check_image_format
 from scripts.generate import check_audio_format
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
-from config.settings import create_folders_path, read_path, update_path
 
-def clear_terminal():
-    """Clears the terminal screen based on the Operating System."""
-    os.system("cls" if os.name == "nt" else "clear")
+from config.settings import create_folders_path, default_input_path_choice, default_output_path_choice
+from utils import clear_terminal, prompt_to_continue, create_choice_list
 
-def prompt_to_continue():
-    if input("Press Enter to continue or 'q' to exit... ").lower() == "q":
-        return True
-    return False
-
-def create_choice_list(types_list: list):
-    format_list = [Choice(value=x, name=x) for x in types_list]
-
-    return format_list
-
-def path_image_choice(path):
+def path_media_choice(path, media_type):
     print("--- Choice Path ---")
     current_path_directory = path
-
-    while True:
-        file_path = inquirer.filepath(
-            message="Choice the Image File!",
-            default=str(current_path_directory),
-            validate=check_image_format
-        ).execute()
-
-        if not file_path:
-            break
-            
-        if os.path.isfile(file_path):
-            return file_path
-
-        elif os.path.isdir(file_path):
-            current_path_directory = file_path
-            clear_terminal()
-    return current_path_directory
-
-def path_audio_choice(path):
-    current_path_directory = path
-
-    while True:
-        file_path = inquirer.filepath(
-            message="Choice the Audio File!",
-            default=str(current_path_directory),
-            validate=check_audio_format
-        ).execute()
-
-        if not file_path:
-            break
-            
-        if os.path.isfile(file_path):
-            return file_path
-
-        elif os.path.isdir(file_path):
-            current_path_directory = file_path
-            clear_terminal()
-    return current_path_directory
-
-def default_path_choice(default: str):
-    path_name = default.replace("_", " ").title()
-
-    clear_terminal()
-    print("--- Choice Path ---")
-
-    paths = read_path(default)
-    paths_list = [Choice(value=x, name=x) for x in paths]
-    paths_list.append(Choice(value="Another", name="> Choice another path."))
- 
-    default_path = inquirer.select(
-        message=f"Choice a Default {path_name}!",
-        choices=paths_list
-    ).execute()
-
-    functions_call = {
-        "Download Path": None,
-        "Image Path": path_image_choice,
-        "Str Path": None
+    
+    functions_format_check_call = {
+        "Image Path": check_image_format,
+        "Srt Path": check_audio_format
     }
 
-    action_fuction = functions_call.get(path_name)
-    return action_fuction(os.path.expanduser("~") if default_path == "Another" else default_path)
+    check_media_format = functions_format_check_call[media_type]
+
+    while True:
+        file_path = inquirer.filepath(
+            message=f"Choice the {media_type} File!",
+            default=str(current_path_directory),
+            validate=check_media_format
+        ).execute()
+
+        if not file_path:
+            break
+            
+        if os.path.isfile(file_path):
+            return file_path
+
+        elif os.path.isdir(file_path):
+            current_path_directory = file_path
+            clear_terminal()
+
+    return current_path_directory
 
 def media_downloader():
     if not check_js_runtime:
         return None
 
-    file_path = default_path_choice("DOWNLOAD_PATH")
+    output_path = default_output_path_choice("DOWNLOAD_PATH")
     checked_url = None
 
     while True:
@@ -115,7 +66,7 @@ def media_downloader():
         else:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             
-            if prompt_to_continue():
+            if prompt_to_continue() == "Exit":
                 clear_terminal()
                 sys.exit(1)
             continue
@@ -131,12 +82,14 @@ def media_downloader():
     if file_format == "Return":
         clear_terminal()
     else:
-        download_media(url=checked_url, output_path=file_path, file_type=file_format)
+        download_media(url=checked_url, output_path=output_path, file_type=file_format)
         prompt_to_continue()
 
 def image_converter():
     print("--- Image Converter ---")
-    file_path = default_path_choice("IMAGE_PATH")
+    output_path = default_output_path_choice("IMAGE_PATH")
+    file_path = path_media_choice(path=default_input_path_choice("IMAGE_PATH"), media_type="IMAGE_PATH")
+
 
     file_format_list = create_choice_list(["PNG", "JPEG", "JPG", "WEBP"])
     file_format_list.append(Choice(value="Return", name="Return"))
@@ -149,24 +102,23 @@ def image_converter():
     if file_format == "Return":
         clear_terminal()
     else:
-        update_path(path_name="IMAGE_PATH", new_path=Path(file_path))
+        # TODO - file_path is the path of media file.
+        pass
 
 def srt_generator():
     print("--- SRT Generator ---")
-    file_path = default_path_choice("SRT_PATH")
+    output_path = default_output_path_choice("SRT_PATH")
+    file_path = path_media_choice(path=default_input_path_choice("SRT_PATH"), media_type="SRT_PATH")
 
-    srt_mode = create_choice_list([])
+    srt_mode = create_choice_list(["Exemple1", "Exemple2"]) # TODO - add whisper modes
     srt_mode.append(Choice(value="Return", name="Return"))
 
     if srt_mode == "Return":
         clear_terminal()
     else:
-
-
-        update_path(path_name="IMAGE_PATH", new_path=Path(file_path).parent)
-        audio_file = path_audio_choice()
+        # TODO - file_path is the path of media file.
+        pass
         
-
 def main():
     clear_terminal()
 
@@ -198,14 +150,6 @@ def main():
 
 if __name__ == "__main__":
     clear_terminal()
-
     create_folders_path() # Creating/checking the json file
-    #logging.info("Fuctions 'create_folder_path' execute successful.")
 
     main()
-
-    # TODO - Check if the code arguments are good -> Setup it if not
-    # TODO - Check if main.py and config.py is good to be in src and if scripts its a good name
-    # TODO - Setup download def and str_generator.
-    # str generator -> choice file, choice default modes and call fuction
-    # download -> choice folder to save -> input the url -> choice mode (mp3, wav or mp4) always download in best format.

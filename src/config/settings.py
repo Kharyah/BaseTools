@@ -1,6 +1,12 @@
 import json
 import logging
 import os
+
+from pathlib import Path
+from utils import clear_terminal
+
+from InquirerPy import inquirer
+from InquirerPy.base.control import Choice
 from pathlib import Path
 
 JSON_FILE = Path("data/folders_path.json")
@@ -61,19 +67,76 @@ def create_folders_path():
 
 def read_path(path_name: str = None):
     with open(JSON_FILE, "r", encoding="utf-8") as f:
-        dates = json.load(f)
+        data = json.load(f)
+    
+    return data[path_name] if path_name is not None else data
 
-    return dates[path_name] if path_name != None else dates
-
-def update_path(path_name, new_path):
-    path_append = read_path()    
+def update_path(path_name: str, new_path: str, is_output: bool = False):
+    data = read_path()
     new_path = str(new_path)
+    
+    if is_output:
+        data[path_name]["output"] = new_path
 
-    if new_path not in path_append[path_name]:
-        if len(path_append[path_name]) <= 3:
-            path_append[path_name].append(new_path)
-        else:
-            path_append[path_name][0] = new_path
-
+    else:
+        target_list = data[path_name]["inputs"]
+        
+        if new_path not in target_list:
+            if len(target_list) < 3:
+                target_list.append(new_path)
+            else:
+                target_list.pop(0)
+                target_list.append(new_path)
+                
     with open(JSON_FILE, "w", encoding="utf-8") as f:
-        json.dump(path_append, f, indent=4)
+        json.dump(data, f, indent=4)
+
+def default_input_path_choice(default: str):
+    path_name = default.replace("_", " ").title()
+
+    clear_terminal()
+    print("--- Choice Input Path ---")
+
+    paths = read_path(default)
+    paths_list = [Choice(value=x, name=x) for x in paths["inputs"]]
+    paths_list.append(Choice(value="Another", name="> Choice another path."))
+ 
+    default_path = inquirer.select(
+        message=f"Choice a Default {path_name}:",
+        choices=paths_list
+    ).execute()
+
+    path = os.path.expanduser("~") if default_path == "Another" else default_path
+    update_path(path_name=default, new_path=Path(default_path))
+
+    return path
+
+def default_output_path_choice(default: str):
+    path_name = default.replace("_", " ").title()
+
+    clear_terminal()
+    print("--- Choice Output Path ---")
+
+    output_path = read_path(default)
+    output_path_choice = inquirer.select(
+        message=f"Choice the Output {path_name}:",
+        choices=[
+            Choice(value=f"{output_path["output"]}", name=f"{output_path["output"]}"),
+            Choice(value="Another", name="> Choice another path.")
+        ]
+    ).execute()
+
+    if output_path_choice == "Another":
+        print("--- Choice Output Path ---")
+
+        final_output_path = inquirer.filepath(
+            message=f"Choice the Output {path_name}:",
+            default=str(os.path.expanduser("~")),
+            only_directories=True
+        ).execute()
+
+        update_path(path_name=default, new_path=Path(final_output_path), is_output=True)
+        return final_output_path
+    else:
+        update_path(path_name=default, new_path=Path(output_path_choice), is_output=True)
+        return output_path_choice
