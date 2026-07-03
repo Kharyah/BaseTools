@@ -10,43 +10,40 @@ from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from pathlib import Path
 
-from scripts.converter import check_image_format
-from scripts.generate import check_audio_format
+from scripts.converter import check_image_format, convert_image_format
+from scripts.generate import check_audio_format, generate_custom_split_srt
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
 
-from config.settings import create_folders_path, default_input_path_choice, default_output_path_choice
+from config.settings import create_folders_path, default_input_path_choice, default_output_path_choice, update_path
 from utils import clear_terminal, prompt_to_continue, create_choice_list
 
 def path_media_choice(path, media_type):
     print("--- Choice Path ---")
     current_path_directory = path
+    function_name = media_type.replace("_", " ").title()
     
     functions_format_check_call = {
         "Image Path": check_image_format,
         "Srt Path": check_audio_format
     }
 
-    check_media_format = functions_format_check_call[media_type]
+    check_media_format = functions_format_check_call[function_name]
 
     while True:
         file_path = inquirer.filepath(
-            message=f"Choice the {media_type} File!",
+            message=f"Choice the {function_name} File!",
             default=str(current_path_directory),
             validate=check_media_format
         ).execute()
 
-        if not file_path:
-            break
-            
         if os.path.isfile(file_path):
+            update_path(path_name=media_type, new_path=Path(file_path).parent)
             return file_path
 
         elif os.path.isdir(file_path):
             current_path_directory = file_path
             clear_terminal()
-
-    return current_path_directory
 
 def media_downloader():
     if not check_js_runtime:
@@ -66,9 +63,7 @@ def media_downloader():
         else:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             
-            if prompt_to_continue() == "Exit":
-                clear_terminal()
-                sys.exit(1)
+            prompt_to_continue()
             continue
 
     file_format_list = create_choice_list(["mp3", "mp4", "wav"])
@@ -90,8 +85,7 @@ def image_converter():
     output_path = default_output_path_choice("IMAGE_PATH")
     file_path = path_media_choice(path=default_input_path_choice("IMAGE_PATH"), media_type="IMAGE_PATH")
 
-
-    file_format_list = create_choice_list(["PNG", "JPEG", "JPG", "WEBP"])
+    file_format_list = create_choice_list(["JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"])
     file_format_list.append(Choice(value="Return", name="Return"))
 
     file_format = inquirer.select(
@@ -102,8 +96,8 @@ def image_converter():
     if file_format == "Return":
         clear_terminal()
     else:
-        # TODO - file_path is the path of media file.
-        pass
+        convert_image_format(input_path=file_path, output_dir=output_path, target_format=file_format)
+        prompt_to_continue()
 
 def srt_generator():
     print("--- SRT Generator ---")
@@ -116,8 +110,19 @@ def srt_generator():
     if srt_mode == "Return":
         clear_terminal()
     else:
-        # TODO - file_path is the path of media file.
-        pass
+        # TODO - Create a error check.
+        # TODO - Create default max_words and max_chars choices.
+        # TODO - Create default mode choices.
+        # TODO - Create language choice.
+
+        generate_custom_split_srt(
+            media_path=file_path,
+            output_path=output_path,
+            model_size="base",
+            language="pt",
+        )
+
+        prompt_to_continue()
         
 def main():
     clear_terminal()

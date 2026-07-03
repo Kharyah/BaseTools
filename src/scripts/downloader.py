@@ -55,11 +55,10 @@ def show_progress_percentage(d: dict) -> None:
         
         if total_bytes > 0:
             percentage = (downloaded_bytes / total_bytes) * 100
-            print(f"Progress: {percentage:.1f}%", end="\r", flush=True)
+            print(f"Donwloading Progress: {percentage:.1f}%", end="\r", flush=True)
             
     elif d.get('status') == 'finished':
-        # Prints a newline so the next [SUCCESS] message doesn't overwrite the 100%
-        print()
+        print() # Prints a newline so the next [SUCCESS] message doesn't overwrite the 100%
 
 
 def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
@@ -68,11 +67,11 @@ def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
     ydl_opts = {
         'outtmpl': outtmpl_path,
         'remote_components': 'ejs:github',
-        'quiet': True,              # Desativa a saída padrão de informações
-        'no_warnings': True,        # Oculta os avisos no terminal
-        'noprogress': True,         # FORÇA a desativação da barra nativa em qualquer protocolo (HLS, DASH, etc.)
-        'logger': DownloadLogger(), # Continua desviando os logs para a classe que você criou
-        'progress_hooks': [show_progress_percentage], # Mantém o seu hook de porcentagem
+        'quiet': True,              # Disables the default output of information
+        'no_warnings': True,        # Hides the warnings on the terminal
+        'noprogress': True,         # FORCES the native bar to be disabled on any protocol (HLS, DASH, etc.)
+        'logger': DownloadLogger(), # Keeps diverting logs to the class you created
+        'progress_hooks': [show_progress_percentage], # Keeps your hook percentage
     }
 
     if file_type.lower() == 'mp4':
@@ -97,7 +96,8 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
     try:
         ydl_opts = get_yt_dlp_options(output_path, file_type)
         
-        print(f"\n[INFO] Extracting metadata and initiating download...")
+        print(35 * "--")
+        print(f"[INFO] Extracting metadata and initiating download...")
         print(f"[INFO] Target Format: {file_type.upper()} (Best Quality)")
         print(f"[INFO] Destination: {output_path}\n")
         
@@ -105,6 +105,7 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
             ydl.download([url])
             
         print(f"\n[SUCCESS] Download completed successfully!")
+        print(35 * "--")
         return True
         
     except Exception as e:

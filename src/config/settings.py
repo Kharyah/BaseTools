@@ -29,7 +29,7 @@ def start_logging():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     
-    # FORCE CLEANUP: Removes any ghost handlers created by rogue imports
+    # FORCE CLEANUP: Remove handlers existentes para evitar duplicidade
     if root_logger.handlers:
         root_logger.handlers.clear()
         
@@ -38,14 +38,11 @@ def start_logging():
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
+    # Configura APENAS o FileHandler
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setFormatter(formatter)
     
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    
     root_logger.addHandler(file_handler)
-    root_logger.addHandler(stream_handler)
 
 def create_folders_path():
     if not JSON_FILE.exists():
@@ -75,21 +72,22 @@ def update_path(path_name: str, new_path: str, is_output: bool = False):
     data = read_path()
     new_path = str(new_path)
     
-    if is_output:
-        data[path_name]["output"] = new_path
+    if os.path.exists(new_path):
+        if is_output:
+            data[path_name]["output"] = new_path
 
-    else:
-        target_list = data[path_name]["inputs"]
-        
-        if new_path not in target_list:
-            if len(target_list) < 3:
-                target_list.append(new_path)
-            else:
-                target_list.pop(0)
-                target_list.append(new_path)
-                
-    with open(JSON_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+        else:
+            target_list = data[path_name]["inputs"]
+            
+            if new_path not in target_list:
+                if len(target_list) < 3:
+                    target_list.append(new_path)
+                else:
+                    target_list.pop(0)
+                    target_list.append(new_path)
+                    
+        with open(JSON_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
 
 def default_input_path_choice(default: str):
     path_name = default.replace("_", " ").title()
@@ -107,8 +105,6 @@ def default_input_path_choice(default: str):
     ).execute()
 
     path = os.path.expanduser("~") if default_path == "Another" else default_path
-    update_path(path_name=default, new_path=Path(default_path))
-
     return path
 
 def default_output_path_choice(default: str):
