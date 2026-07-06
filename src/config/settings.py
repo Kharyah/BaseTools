@@ -9,7 +9,14 @@ from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 from pathlib import Path
 
-JSON_FILE = Path("data/folders_path.json")
+PATH_FILE_JSON = Path("data/folders_path.json")
+SRT_MODES_JSON = Path("data/srt_modes.json")
+
+JSON_FILE_MAP = {
+    "path_file": PATH_FILE_JSON,
+    "srt_modes": SRT_MODES_JSON
+}
+
 
 def get_project_root(anchor: str = "requirements.txt") -> Path:
     """Finds the project root directory by looking for an anchor file."""
@@ -45,7 +52,7 @@ def start_logging():
     root_logger.addHandler(file_handler)
 
 def create_folders_path():
-    if not JSON_FILE.exists():
+    if not PATH_FILE_JSON.exists():
         default_paths = {
             "IMAGE_PATH": [
                 str(Path.home() / "Pictures"),
@@ -58,18 +65,18 @@ def create_folders_path():
             ]
         }
 
-        with open(JSON_FILE, "w", encoding="utf-8") as f:
+        with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
             json.dump(default_paths, f, indent=4)
     return None
 
-def read_path(path_name: str = None):
-    with open(JSON_FILE, "r", encoding="utf-8") as f:
+def read_path(json_name: srt, inner_key: str = None):
+    with open(JSON_FILE_MAP[json_name], "r", encoding="utf-8") as f:
         data = json.load(f)
     
-    return data[path_name] if path_name is not None else data
+    return data[inner_key] if inner_key is not None else data
 
 def update_path(path_name: str, new_path: str, is_output: bool = False):
-    data = read_path()
+    data = read_path(json_name="path_file")
     new_path = str(new_path)
     
     if os.path.exists(new_path):
@@ -86,7 +93,7 @@ def update_path(path_name: str, new_path: str, is_output: bool = False):
                     target_list.pop(0)
                     target_list.append(new_path)
                     
-        with open(JSON_FILE, "w", encoding="utf-8") as f:
+        with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
 
 def default_input_path_choice(default: str):
@@ -95,7 +102,7 @@ def default_input_path_choice(default: str):
     clear_terminal()
     print("--- Choice Input Path ---")
 
-    paths = read_path(default)
+    paths = read_path(json_name="path_file", inner_key=default)
     paths_list = [Choice(value=x, name=x) for x in paths["inputs"]]
     paths_list.append(Choice(value="Another", name="> Choice another path."))
  
@@ -113,7 +120,7 @@ def default_output_path_choice(default: str):
     clear_terminal()
     print("--- Choice Output Path ---")
 
-    output_path = read_path(default)
+    output_path = read_path(json_name="path_file", inner_key=default)
     output_path_choice = inquirer.select(
         message=f"Choice the Output {path_name}:",
         choices=[

@@ -11,11 +11,11 @@ from InquirerPy.base.control import Choice
 from pathlib import Path
 
 from scripts.converter import check_image_format, convert_image_format
-from scripts.generate import check_audio_format, generate_custom_split_srt
+from scripts.generate import check_audio_format, generate_custom_split_srt, get_supported_whisper_languages
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
 
-from config.settings import create_folders_path, default_input_path_choice, default_output_path_choice, update_path
+from config.settings import create_folders_path, default_input_path_choice, default_output_path_choice, update_path, read_path
 from utils import clear_terminal, prompt_to_continue, create_choice_list
 
 def path_media_choice(path, media_type):
@@ -104,7 +104,8 @@ def srt_generator():
     output_path = default_output_path_choice("SRT_PATH")
     file_path = path_media_choice(path=default_input_path_choice("SRT_PATH"), media_type="SRT_PATH")
 
-    srt_mode = create_choice_list(["Exemple1", "Exemple2"]) # TODO - add whisper modes
+    srt_all_modes = read_path(json_name="srt_modes")
+    srt_mode = create_choice_list(list(srt_all_modes.keys()))
     srt_mode.append(Choice(value="Return", name="Return"))
 
     if srt_mode == "Return":
@@ -114,12 +115,30 @@ def srt_generator():
         # TODO - Create default max_words and max_chars choices.
         # TODO - Create default mode choices.
         # TODO - Create language choice.
+        # TODO - Create a highlight configuration.
+        # TODO _ Create a Accents configuration (with mode choices).
+
+        mode_choice = inquirer.select(
+            message="Choice the SRT mode.",
+            choices=srt_mode,
+        ).execute()
+
+        lg_choice = sorted(
+            [Choice(value=code, name=name.title()) for code, name in get_supported_whisper_languages().items()],
+            key=lambda x: x.name
+        )
+
+        language_choice = inquirer.select(
+            message="Choice the language.",
+            choices=lg_choice
+        ).execute()
 
         generate_custom_split_srt(
+            srt_mode=mode_choice,
             media_path=file_path,
             output_path=output_path,
             model_size="base",
-            language="pt",
+            language=language_choice,
         )
 
         prompt_to_continue()

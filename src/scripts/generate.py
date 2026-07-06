@@ -2,7 +2,9 @@ import os
 
 from pathlib import Path
 from typing import Optional
-#from whisper.utils import get_writer
+from config.settings import read_path
+
+import stable_whisper
 
 VALID_FORMATS = [".mp4", ".mp3", ".wav"]
 
@@ -13,22 +15,36 @@ def check_audio_format(file_path):
         return False
     return True
 
+def get_supported_whisper_languages() -> dict:
+    """
+    Returns a dictionary of all languages supported by the underlying 
+    Whisper model used by stable-ts, where keys are language codes (e.g., 'pt') 
+    and values are the full names (e.g., 'portuguese').
+    """
+    from whisper.tokenizer import LANGUAGES
+
+    # stable-ts re-exports whisper variables, including the LANGUAGES dict
+    return LANGUAGES
+
 def generate_custom_split_srt(
+    srt_mode: srt,
     media_path: str, 
     output_path: Optional[str] = None,
     model_size: str = "base", 
-    language: str = "pt", 
-    max_words: int = 3,      # Maximum words per caption line
-    max_chars: int = 15      # Maximum characters per caption line
+    language: str = "pt",
 ):
     """
     Uses stable-whisper to transcribe and strictly control 
     the word/character count per subtitle line. Saves output to target path.
     """
-    import stable_whisper
-    
-    print(f"Loading Stable-Whisper model '{model_size}'...")
+
     model = stable_whisper.load_model(model_size)
+    srt_all_modes = read_path(json_name="srt_modes", inner_key=srt_mode)
+    max_chars = srt_all_modes["max_chars"]
+    max_words = srt_all_modes["max_words"]
+    
+    print(35 * "--")
+    print(f"Loading Stable-Whisper model '{model_size}'...")
     
     print(f"Transcribing: {media_path}...")
     result = model.transcribe(
@@ -57,7 +73,7 @@ def generate_custom_split_srt(
         result
         .split_by_length(max_chars=max_chars, max_words=max_words)
         # highlight_color=None removes all HTML color tags from the SRT output
-        .to_srt_vtt(output_path, highlight_color=None)
+        .to_srt_vtt(output_path, word_level=False)
     )
     
     print(35 * "--")
