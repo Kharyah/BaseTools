@@ -1,19 +1,28 @@
 import shutil
-import sys
 
-def check_js_runtime():
+
+def check_js_runtime() -> bool:
+    """Checks if a valid JavaScript runtime is installed in the environment."""
+    # Look for Deno or Node.js executables in the system's PATH
     runtime_deno = shutil.which("deno")
     runtime_node = shutil.which("node")
-    
+
+    # yt-dlp requires a JS runtime to execute deciphering scripts for YT URLs
     if runtime_deno or runtime_node:
         return True
-    exibir_erro_e_sair()
 
-def display_error():
+    display_error()
+    return False  # Explicitly return False to block execution in the main loop
+
+
+def display_error() -> None:
+    """
+    Displays a CLI error message with instructions to install a JS runtime.
+    """
     print("\n" + "="*70)
     print("[CRITICAL ERROR] JavaScript Runtime Not Found!")
     print("="*70)
-    print("The 'yt-dlp' package requires Deno or Node.js installed on your system")
+    print("The 'yt-dlp' requires Deno or Node.js installed on your system")
     print("to decrypt and download YouTube videos properly.")
     print("\nHow to resolve this:")
     print("  1. Install Deno (Recommended): https://deno.land")

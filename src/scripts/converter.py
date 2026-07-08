@@ -4,27 +4,35 @@ from PIL import Image
 from pathlib import Path
 
 # A set of the most common and widely supported image formats
-SUPPORTED_FORMATS: Set[str] = {
+SUPPORTED_FORMATS: set[str] = {
     "JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"
 }
 
-def check_image_format(file_path):
+
+def check_image_format(file_path: str) -> bool:
+    """Checks if the file extension is supported."""
     path = Path(file_path)
 
+    # Slices off the leading dot to match SUPPORTED_FORMATS
     if path.suffix[1:].upper() not in SUPPORTED_FORMATS:
         return False
     return True
 
-def convert_image_format(input_path: str, output_dir: str, target_format: str) -> None:
+
+def convert_image_format(
+    input_path: str,
+    output_dir: str,
+    target_format: str
+) -> None:
     """
-    Converts an image to a target format and saves it into the specified output directory.
-    Automatically extracts the original file name and applies the new extension.
-    
+    Converts an image to a target format and saves
+    it into the specified output directory.
+
     :param input_path: Verified path to the source image file.
-    :param output_dir: Path to the target directory where the image will be saved.
-    :param target_format: The desired image format (e.g., 'PNG', 'JPEG', 'WEBP').
+    :param output_dir: Path directory where the image will be saved.
+    :param target_format: The desired image format (e.g., 'PNG', 'JPEG').
     """
-    # 1. Normalize format
+    # Normalize format
     target_format = target_format.upper()
     if target_format == "JPG":
         target_format = "JPEG"
@@ -32,32 +40,32 @@ def convert_image_format(input_path: str, output_dir: str, target_format: str) -
     if target_format not in SUPPORTED_FORMATS:
         raise ValueError(f"Unsupported format: '{target_format}'")
 
-    # 2. Extract the base file name without its original extension
-    # Example: "C:/Images/photo.png" -> "photo"
+    # Extract the base file name without its original extension
     base_name = os.path.splitext(os.path.basename(input_path))[0]
-    
-    # 3. Define the correct extension for the output file
+
+    # Define the correct extension for the output file
     extension = "jpg" if target_format == "JPEG" else target_format.lower()
-    
-    # 4. Construct the full final output path automatically
-    # Example: "C:/Users/Usuario/Downloads" + "photo" + ".jpg"
+
+    # Construct the full final output path automatically
     final_output_path = os.path.join(output_dir, f"{base_name}.{extension}")
 
     try:
         with Image.open(input_path) as img:
-            # Handle alpha channel transparency for JPEG conversion
+            # JPEG does not support transparency (alpha channel).
+            # Convert RGBA/P to RGB to prevent Pillow from raising an OSError.
             if img.mode in ("RGBA", "P") and target_format == "JPEG":
                 img = img.convert("RGB")
-            
+
             # Ensure the output directory exists
             os.makedirs(output_dir, exist_ok=True)
-                
+
             # Save using the automatically generated full path
             img.save(final_output_path, format=target_format)
-            
+
     except IOError as e:
+        # Wrap the low-level Pillow/OS exception into a clear application error
         raise IOError(f"Failed to process the image conversion: {e}")
-    
+
     print(35 * "--")
     print(f"Image successfully converted to {target_format}.")
     print(f"Saved to: {final_output_path}")

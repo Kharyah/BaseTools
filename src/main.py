@@ -1,28 +1,39 @@
-from config.settings import start_logging
-
-start_logging()
-
 import os
-import sys
-import logging
+# import logging TODO - Use logging
 
+from pathlib import Path
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
-from pathlib import Path
 
+from config.settings import start_logging
+from utils import clear_terminal, prompt_to_continue, create_choice_list
 from scripts.converter import check_image_format, convert_image_format
-from scripts.generate import check_audio_format, generate_custom_split_srt, get_supported_whisper_languages
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
 
-from config.settings import create_folders_path, default_input_path_choice, default_output_path_choice, update_path, read_path
-from utils import clear_terminal, prompt_to_continue, create_choice_list
 
-def path_media_choice(path, media_type):
-    print("--- Choice Path ---")
+from script.generation import (
+    check_audio_format,
+    generate_custom_split_srt,
+    get_supported_whisper_languages
+)
+
+from config.settings import (
+    create_folders_path,
+    default_input_path_choice,
+    default_output_path_choice,
+    update_path,
+    read_path
+)
+
+start_logging()
+
+
+def path_media_choice(path: str, media_type: str) -> str:
+    print("--- Select Path ---")
     current_path_directory = path
     function_name = media_type.replace("_", " ").title()
-    
+
     functions_format_check_call = {
         "Image Path": check_image_format,
         "Srt Path": check_audio_format
@@ -32,7 +43,7 @@ def path_media_choice(path, media_type):
 
     while True:
         file_path = inquirer.filepath(
-            message=f"Choice the {function_name} File!",
+            message=f"Select the {function_name} File:",
             default=str(current_path_directory),
             validate=check_media_format
         ).execute()
@@ -41,12 +52,17 @@ def path_media_choice(path, media_type):
             update_path(path_name=media_type, new_path=Path(file_path).parent)
             return file_path
 
+        # If a directory is selected, update the current
+        # path to allow nested browsing.
         elif os.path.isdir(file_path):
             current_path_directory = file_path
             clear_terminal()
 
-def media_downloader():
-    if not check_js_runtime:
+
+def media_downloader() -> None:
+    # Guard clause: Ensure JavaScript runtime is available
+    # before invoking yt-dlp.
+    if not check_js_runtime():
         return None
 
     output_path = default_output_path_choice("DOWNLOAD_PATH")
@@ -56,13 +72,12 @@ def media_downloader():
         clear_terminal()
         print("--- Media Downloader ---")
         url = str(input("Enter a URL: "))
-        
+
         if check_url(url):
             checked_url = url
             break
         else:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
-            
             prompt_to_continue()
             continue
 
@@ -70,66 +85,86 @@ def media_downloader():
     file_format_list.append(Choice(value="Return", name="Return"))
 
     file_format = inquirer.select(
-        message="Choice The File Format (It will be the best quality possible):",
+        message="Select The File Format (It'll be the best quality possible):",
         choices=file_format_list
     ).execute()
-    
+
     if file_format == "Return":
         clear_terminal()
     else:
-        download_media(url=checked_url, output_path=output_path, file_type=file_format)
+        download_media(
+            url=checked_url,
+            output_path=output_path,
+            file_type=file_format
+        )
         prompt_to_continue()
 
-def image_converter():
+
+def image_converter() -> None:
     print("--- Image Converter ---")
     output_path = default_output_path_choice("IMAGE_PATH")
-    file_path = path_media_choice(path=default_input_path_choice("IMAGE_PATH"), media_type="IMAGE_PATH")
 
-    file_format_list = create_choice_list(["JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"])
+    # Map media types to their respective validator functions
+    file_path = path_media_choice(
+        path=default_input_path_choice("IMAGE_PATH"),
+        media_type="IMAGE_PATH"
+    )
+
+    file_format_list = create_choice_list(
+        ["JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"]
+    )
     file_format_list.append(Choice(value="Return", name="Return"))
 
     file_format = inquirer.select(
-        message="Choice The File Format:",
+        message="Select The File Format:",
         choices=file_format_list
     ).execute()
 
     if file_format == "Return":
         clear_terminal()
     else:
-        convert_image_format(input_path=file_path, output_dir=output_path, target_format=file_format)
+        convert_image_format(
+            input_path=file_path,
+            output_dir=output_path,
+            target_format=file_format
+        )
         prompt_to_continue()
 
-def srt_generator():
+
+def srt_generator() -> None:
     print("--- SRT Generator ---")
     output_path = default_output_path_choice("SRT_PATH")
-    file_path = path_media_choice(path=default_input_path_choice("SRT_PATH"), media_type="SRT_PATH")
+
+    # Map media types to their respective validator functions
+    file_path = path_media_choice(
+        path=default_input_path_choice("SRT_PATH"),
+        media_type="SRT_PATH"
+    )
 
     srt_all_modes = read_path(json_name="srt_modes")
     srt_mode = create_choice_list(list(srt_all_modes.keys()))
     srt_mode.append(Choice(value="Return", name="Return"))
 
+    mode_choice = inquirer.select(
+        message="Select the SRT mode:",
+        choices=srt_mode,
+    ).execute()
+
     if srt_mode == "Return":
         clear_terminal()
     else:
-        # TODO - Create a error check.
-        # TODO - Create default max_words and max_chars choices.
-        # TODO - Create default mode choices.
-        # TODO - Create language choice.
-        # TODO - Create a highlight configuration.
-        # TODO _ Create a Accents configuration (with mode choices).
+        whisper_languages = get_supported_whisper_languages().items()
 
-        mode_choice = inquirer.select(
-            message="Choice the SRT mode.",
-            choices=srt_mode,
-        ).execute()
-
-        lg_choice = sorted(
-            [Choice(value=code, name=name.title()) for code, name in get_supported_whisper_languages().items()],
-            key=lambda x: x.name
+        # Sort supported languages alphabetically by name 
+        # for better UX in the selection menu.
+        lg_choice = sorted([
+                Choice(value=code, name=name.title())
+                for code, name in whisper_languages
+            ], key=lambda x: x.name
         )
 
         language_choice = inquirer.select(
-            message="Choice the language.",
+            message="Select the language:",
             choices=lg_choice
         ).execute()
 
@@ -142,8 +177,9 @@ def srt_generator():
         )
 
         prompt_to_continue()
-        
-def main():
+
+
+def main() -> None:
     clear_terminal()
 
     call_functions = {
@@ -152,13 +188,26 @@ def main():
         "Srt Generator": srt_generator
     }
 
-    choices_values = ["Media Downloader", "Image Converter", "Srt Generator", "Exit"]
-    choices_texts = ["1. Downloader Media with yt-dlp.", "2. Converter Images.", "3. Generator srt files.", "4. Exit"]
-    choices_list = [Choice(value=x, name=y) for x, y in zip(choices_values, choices_texts)]
+    choices_values = [
+        "Media Downloader",
+        "Image Converter",
+        "Srt Generator",
+        "Exit"
+    ]
+    choices_texts = [
+        "1. Download Media with yt-dlp.",
+        "2. Convert Images.",
+        "3. Generate srt files.",
+        "4. Exit"
+    ]
+    choices_list = [
+        Choice(value=x, name=y)
+        for x, y in zip(choices_values, choices_texts)
+    ]
 
     while True:
         user_choice = inquirer.select(
-            message="Select Tool!",
+            message="Select Tool:",
             choices=choices_list,
             default="Media Downloader"
         ).execute()
@@ -172,8 +221,9 @@ def main():
 
         clear_terminal()
 
+
 if __name__ == "__main__":
     clear_terminal()
-    create_folders_path() # Creating/checking the json file
+    create_folders_path()
 
     main()
