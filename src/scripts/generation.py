@@ -39,7 +39,7 @@ def generate_custom_split_srt(
     language: str = "pt",
 ) -> None:
     """
-    Uses stable-whisper to transcribe and strictly control 
+    Uses stable-whisper to transcribe and strictly control
     the word/character count per subtitle line. Saves output to target path.
     """
 
