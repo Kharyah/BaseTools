@@ -8,6 +8,8 @@ from utils import clear_terminal
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
+logger = logging.getLogger(__name__)
+
 PATH_FILE_JSON = Path("data/folders_path.json")
 SRT_MODES_JSON = Path("data/srt_modes.json")
 
@@ -97,6 +99,8 @@ def create_folders_path() -> None:
         }
         with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
             json.dump(default_paths, f, indent=4)
+
+    logging.info("Folder_path.json Created sucessful.")
     return None
 
 
@@ -137,7 +141,7 @@ def update_path(
     data = read_path(json_name="path_file")
     new_path = str(new_path)
 
-    if os.path.exists(new_path):
+    if not os.path.exists(new_path):
         if is_output:
             data[path_name]["output"] = new_path
 
@@ -155,6 +159,8 @@ def update_path(
 
         with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
+    
+        logging.info(f"{new_path} added in {path_name}.")
 
 
 def default_input_path_choice(default: str) -> str:
@@ -171,11 +177,11 @@ def default_input_path_choice(default: str) -> str:
     path_name = default.replace("_", " ").title()
 
     clear_terminal()
-    print("--- Choice Input Path ---")
+    print(10*"-" + " Select Input Path " + 10*"-")
 
     paths = read_path(json_name="path_file", inner_key=default)
-    paths_list = [Choice(value=x, name=x) for x in paths["inputs"]]
-    paths_list.append(Choice(value="Another", name="> Select another path:"))
+    paths_list = [Choice(value=x, name=f"  > {x}") for x in paths["inputs"]]
+    paths_list.append(Choice(value="Another", name="! Select another path."))
 
     default_path = inquirer.select(
         message=f"Select a Default {path_name}:",
@@ -204,7 +210,7 @@ def default_output_path_choice(default: str) -> str:
     path_name = default.replace("_", " ").title()
 
     clear_terminal()
-    print("--- Choice Output Path ---")
+    print(10*"-" + " Select Output Path " + 10*"-")
 
     output_path = read_path(json_name="path_file", inner_key=default)
     output_path_choice = inquirer.select(
@@ -212,14 +218,14 @@ def default_output_path_choice(default: str) -> str:
         choices=[
             Choice(
                 value=f"{output_path['output']}",
-                name=f"{output_path['output']}"
+                name=f"  > {output_path['output']}"
             ),
-            Choice(value="Another", name="> Select another path:")
+            Choice(value="Another", name="! Select another path.")
         ]
     ).execute()
 
     if output_path_choice == "Another":
-        print("--- Choice Output Path ---")
+        print(10*"-" + " Select Output Path " + 10*"-")
 
         final_output_path = inquirer.filepath(
             message=f"Select the Output {path_name}:",

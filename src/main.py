@@ -1,18 +1,23 @@
 import os
-# import logging TODO - Use logging
+import logging
+
+# Started logging before all imports.
+from config.settings import start_logging
+
+start_logging()
+logging.getLogger(__name__)
 
 from pathlib import Path
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
-from config.settings import start_logging
 from utils import clear_terminal, prompt_to_continue, create_choice_list
 from scripts.converter import check_image_format, convert_image_format
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
 
 
-from script.generation import (
+from scripts.generation import (
     check_audio_format,
     generate_custom_split_srt,
     get_supported_whisper_languages
@@ -26,11 +31,10 @@ from config.settings import (
     read_path
 )
 
-start_logging()
-
 
 def path_media_choice(path: str, media_type: str) -> str:
-    print("--- Select Path ---")
+    print(10*"-" + " Select Path " + 10*"-")
+
     current_path_directory = path
     function_name = media_type.replace("_", " ").title()
 
@@ -70,7 +74,8 @@ def media_downloader() -> None:
 
     while True:
         clear_terminal()
-        print("--- Media Downloader ---")
+        print(10*"-" + " Media Downloader " + 10*"-")
+
         url = str(input("Enter a URL: "))
 
         if check_url(url):
@@ -78,11 +83,13 @@ def media_downloader() -> None:
             break
         else:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
+            print(35 * "--")
+
             prompt_to_continue()
             continue
 
     file_format_list = create_choice_list(["mp3", "mp4", "wav"])
-    file_format_list.append(Choice(value="Return", name="Return"))
+    file_format_list.append(Choice(value="Return", name="! Return"))
 
     file_format = inquirer.select(
         message="Select The File Format (It'll be the best quality possible):",
@@ -101,7 +108,8 @@ def media_downloader() -> None:
 
 
 def image_converter() -> None:
-    print("--- Image Converter ---")
+    print(10*"-" + " Image Converter " + 10*"-")
+
     output_path = default_output_path_choice("IMAGE_PATH")
 
     # Map media types to their respective validator functions
@@ -113,7 +121,7 @@ def image_converter() -> None:
     file_format_list = create_choice_list(
         ["JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"]
     )
-    file_format_list.append(Choice(value="Return", name="Return"))
+    file_format_list.append(Choice(value="Return", name="! Return."))
 
     file_format = inquirer.select(
         message="Select The File Format:",
@@ -132,7 +140,9 @@ def image_converter() -> None:
 
 
 def srt_generator() -> None:
-    print("--- SRT Generator ---")
+    logging.info("Started Srt Generator Logic.")
+
+    print(10*"-" + " SRT Generator " + 10*"-")
     output_path = default_output_path_choice("SRT_PATH")
 
     # Map media types to their respective validator functions
@@ -143,7 +153,7 @@ def srt_generator() -> None:
 
     srt_all_modes = read_path(json_name="srt_modes")
     srt_mode = create_choice_list(list(srt_all_modes.keys()))
-    srt_mode.append(Choice(value="Return", name="Return"))
+    srt_mode.append(Choice(value="Return", name="! Return."))
 
     mode_choice = inquirer.select(
         message="Select the SRT mode:",
@@ -155,10 +165,10 @@ def srt_generator() -> None:
     else:
         whisper_languages = get_supported_whisper_languages().items()
 
-        # Sort supported languages alphabetically by name 
+        # Sort supported languages alphabetically by name
         # for better UX in the selection menu.
         lg_choice = sorted([
-                Choice(value=code, name=name.title())
+                Choice(value=code, name=f"  > {name.title()}")
                 for code, name in whisper_languages
             ], key=lambda x: x.name
         )
@@ -192,18 +202,17 @@ def main() -> None:
         "Media Downloader",
         "Image Converter",
         "Srt Generator",
-        "Exit"
     ]
     choices_texts = [
-        "1. Download Media with yt-dlp.",
-        "2. Convert Images.",
-        "3. Generate srt files.",
-        "4. Exit"
+        "  > Download Media with yt-dlp.",
+        "  > Convert Images.",
+        "  > Generate srt files.",
     ]
     choices_list = [
         Choice(value=x, name=y)
         for x, y in zip(choices_values, choices_texts)
     ]
+    choices_list.append(Choice(value="Exit", name="! Exit."))
 
     while True:
         user_choice = inquirer.select(
@@ -223,6 +232,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.info("BaseTools Started.")
+
     clear_terminal()
     create_folders_path()
 

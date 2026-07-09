@@ -10,12 +10,14 @@ def clear_terminal() -> None:
 
 
 def prompt_to_continue() -> None:
+    """Create a follow-up or exit question."""
     if input("Press Enter to continue or 'q' to exit... ").lower() == "q":
         clear_terminal()
         sys.exit(1)
 
 
 def create_choice_list(types_list: list) -> list:
-    format_list = [Choice(value=x, name=x) for x in types_list]
+    """Create a list for choices in the InquirerPy in a practical way."""
+    format_list = [Choice(value=x, name=f"  > {x}") for x in types_list]
 
     return format_list
