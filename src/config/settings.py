@@ -3,7 +3,7 @@ import json
 import logging
 
 from pathlib import Path
-from utils import clear_terminal
+from utils import clear_terminal, format_header
 
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
@@ -177,7 +177,7 @@ def default_input_path_choice(default: str) -> str:
     path_name = default.replace("_", " ").title()
 
     clear_terminal()
-    print(10*"-" + " Select Input Path " + 10*"-")
+    print(format_header("Select Input Path"))
 
     paths = read_path(json_name="path_file", inner_key=default)
     paths_list = [Choice(value=x, name=f"  > {x}") for x in paths["inputs"]]
@@ -210,7 +210,7 @@ def default_output_path_choice(default: str) -> str:
     path_name = default.replace("_", " ").title()
 
     clear_terminal()
-    print(10*"-" + " Select Output Path " + 10*"-")
+    print(format_header("Select Output Path"))
 
     output_path = read_path(json_name="path_file", inner_key=default)
     output_path_choice = inquirer.select(

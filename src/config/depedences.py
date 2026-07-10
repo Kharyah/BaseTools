@@ -1,5 +1,6 @@
 import shutil
 import logging
+from utils import format_divider
 
 logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ def display_error() -> None:
     """
     Displays a CLI error message with instructions to install a JS runtime.
     """
-    print("\n" + "="*70)
+    print("\n" + format_divider(char="=", width=70))
     print("[CRITICAL ERROR] JavaScript Runtime Not Found!")
     print("="*70)
     print("The 'yt-dlp' requires Deno or Node.js installed on your system")
@@ -37,6 +38,6 @@ def display_error() -> None:
     print("  1. Install Deno (Recommended): https://deno.land")
     print("  2. Or install Node.js: https://nodejs.org")
     print("\nNote: After installation, restart your terminal or IDE.")
-    print("="*70 + "\n")
+    print(format_divider(char="=", width=70) + "\n")
 
     input("Press enter to continue...")

@@ -4,17 +4,20 @@ import logging
 # Started logging before all imports.
 from config.settings import start_logging
 
-start_logging()
-logging.getLogger(__name__)
-
 from pathlib import Path
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
-from utils import clear_terminal, prompt_to_continue, create_choice_list
 from scripts.converter import check_image_format, convert_image_format
 from scripts.downloader import check_url, download_media
 from config.depedences import check_js_runtime
+
+from utils import (
+    clear_terminal,
+    prompt_to_continue,
+    create_choice_list,
+    format_header,
+)
 
 
 from scripts.generation import (
@@ -31,23 +34,23 @@ from config.settings import (
     read_path
 )
 
+FUNCTIONS_FORMAT_CHECK_CALL = {
+    "IMAGE_PATH": check_image_format,
+    "SRT_PATH": check_audio_format
+}
+
 
 def path_media_choice(path: str, media_type: str) -> str:
-    print(10*"-" + " Select Path " + 10*"-")
+    print(format_header("Select Path"))
 
     current_path_directory = path
-    function_name = media_type.replace("_", " ").title()
 
-    functions_format_check_call = {
-        "Image Path": check_image_format,
-        "Srt Path": check_audio_format
-    }
-
-    check_media_format = functions_format_check_call[function_name]
+    check_media_format = FUNCTIONS_FORMAT_CHECK_CALL[media_type]
+    format_function_name = media_type.replace("_", " ").title()
 
     while True:
         file_path = inquirer.filepath(
-            message=f"Select the {function_name} File:",
+            message=f"Select the {format_function_name} File:",
             default=str(current_path_directory),
             validate=check_media_format
         ).execute()
@@ -74,9 +77,9 @@ def media_downloader() -> None:
 
     while True:
         clear_terminal()
-        print(10*"-" + " Media Downloader " + 10*"-")
+        print(format_header("Media Downloader"))
 
-        url = str(input("Enter a URL: "))
+        url = input("Enter a URL: ")
 
         if check_url(url):
             checked_url = url
@@ -108,7 +111,7 @@ def media_downloader() -> None:
 
 
 def image_converter() -> None:
-    print(10*"-" + " Image Converter " + 10*"-")
+    print(format_header("Image Converter"))
 
     output_path = default_output_path_choice("IMAGE_PATH")
 
@@ -142,7 +145,7 @@ def image_converter() -> None:
 def srt_generator() -> None:
     logging.info("Started Srt Generator Logic.")
 
-    print(10*"-" + " SRT Generator " + 10*"-")
+    print(format_header("SRT Generator"))
     output_path = default_output_path_choice("SRT_PATH")
 
     # Map media types to their respective validator functions
@@ -160,7 +163,7 @@ def srt_generator() -> None:
         choices=srt_mode,
     ).execute()
 
-    if srt_mode == "Return":
+    if mode_choice == "Return":
         clear_terminal()
     else:
         whisper_languages = get_supported_whisper_languages().items()
@@ -189,40 +192,31 @@ def srt_generator() -> None:
         prompt_to_continue()
 
 
+CALL_FUNCTIONS_MAIN = {
+    "Media Downloader": media_downloader,
+    "Image Converter": image_converter,
+    "Srt Generator": srt_generator
+}
+MENU_CHOICES = (
+    Choice(value="Media Downloader", name="  > Download Media with yt-dlp."),
+    Choice(value="Image Converter", name="  > Convert Images."),
+    Choice(value="Srt Generator", name="  > Generate srt files."),
+    Choice(value="Exit", name="! Exit.")
+)
+
+
 def main() -> None:
     clear_terminal()
-
-    call_functions = {
-        "Media Downloader": media_downloader,
-        "Image Converter": image_converter,
-        "Srt Generator": srt_generator
-    }
-
-    choices_values = [
-        "Media Downloader",
-        "Image Converter",
-        "Srt Generator",
-    ]
-    choices_texts = [
-        "  > Download Media with yt-dlp.",
-        "  > Convert Images.",
-        "  > Generate srt files.",
-    ]
-    choices_list = [
-        Choice(value=x, name=y)
-        for x, y in zip(choices_values, choices_texts)
-    ]
-    choices_list.append(Choice(value="Exit", name="! Exit."))
 
     while True:
         user_choice = inquirer.select(
             message="Select Tool:",
-            choices=choices_list,
+            choices=MENU_CHOICES,
             default="Media Downloader"
         ).execute()
 
-        if user_choice in call_functions.keys():
-            call_functions[user_choice]()
+        if user_choice in CALL_FUNCTIONS_MAIN.keys():
+            CALL_FUNCTIONS_MAIN[user_choice]()
 
         else:
             print("Closing...")
@@ -232,9 +226,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.info("BaseTools Started.")
-
     clear_terminal()
     create_folders_path()
+
+    start_logging()
+    logging.getLogger(__name__)
+    logging.info("BaseTools Started.")
 
     main()

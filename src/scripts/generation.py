@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import Optional
 from config.settings import read_path
+from utils import format_divider
 
 import stable_whisper
 
@@ -48,7 +49,7 @@ def generate_custom_split_srt(
     max_chars = srt_all_modes["max_chars"]
     max_words = srt_all_modes["max_words"]
 
-    print(35 * "--")
+    print(format_divider())
     print(f"Loading Stable-Whisper model '{model_size}'...")
 
     print(f"Transcribing: {media_path}...")
@@ -89,6 +90,6 @@ def generate_custom_split_srt(
         .to_srt_vtt(output_path, word_level=False)
     )
 
-    print(35 * "--")
+    print(format_divider())
     print(f"Success! Custom SRT saved as: {output_path}")
-    print(35 * "--")
+    print(format_divider())

@@ -2,6 +2,8 @@ import os
 import yt_dlp
 import logging
 
+from utils import format_divider
+
 
 class MyQuietLogger:
     """Custom silent logger to suppress yt-dlp output during URL validation."""
@@ -26,7 +28,7 @@ def check_url(url: str) -> bool:
             return True
 
     except Exception as exc:
-        logging.error(f"Error checking URL: {exc}")
+        logging.warning(f"Error checking URL: {exc}")
         return False
 
 
@@ -127,7 +129,7 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
     try:
         ydl_opts = get_yt_dlp_options(output_path, file_type)
 
-        print(35 * "--")
+        print(format_divider())
         print("[INFO] Extracting metadata and initiating download...")
         print(f"[INFO] Target Format: {file_type.upper()} (Best Quality)")
         print(f"[INFO] Destination: {output_path}\n")
@@ -136,7 +138,7 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
             ydl.download([url])
 
         print("\n[SUCCESS] Download completed successfully!")
-        print(35 * "--")
+        print(format_divider())
         return True
 
     except Exception as e:
