@@ -1,8 +1,11 @@
 import os
+import logging
 
 from PIL import Image
 from pathlib import Path
 from utils import format_divider
+
+logger = logging.getLogger(__name__)
 
 # A set of the most common and widely supported image formats
 SUPPORTED_FORMATS: set[str] = {
@@ -66,6 +69,8 @@ def convert_image_format(
     except IOError as e:
         # Wrap the low-level Pillow/OS exception into a clear application error
         raise IOError(f"Failed to process the image conversion: {e}")
+
+    logging.info("Image converted successfully.")
 
     print(format_divider())
     print(f"Image successfully converted to {target_format}.")

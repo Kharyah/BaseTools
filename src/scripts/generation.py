@@ -1,11 +1,13 @@
 import os
+import logging
+import stable_whisper
 
 from pathlib import Path
 from typing import Optional
 from config.settings import read_path
 from utils import format_divider
 
-import stable_whisper
+logger = logging.getLogger(__name__)
 
 VALID_FORMATS = [".mp4", ".mp3", ".wav"]
 
@@ -89,6 +91,8 @@ def generate_custom_split_srt(
         # highlight_color=None removes all HTML color tags from the SRT output
         .to_srt_vtt(output_path, word_level=False)
     )
+
+    logging.info("SRT Successfully Generated.")
 
     print(format_divider())
     print(f"Success! Custom SRT saved as: {output_path}")

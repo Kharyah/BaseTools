@@ -4,6 +4,8 @@ import logging
 
 from utils import format_divider
 
+logger = logging.getLogger(__name__)
+
 
 class MyQuietLogger:
     """Custom silent logger to suppress yt-dlp output during URL validation."""
@@ -30,13 +32,6 @@ def check_url(url: str) -> bool:
     except Exception as exc:
         logging.warning(f"Error checking URL: {exc}")
         return False
-
-
-logging.basicConfig(
-    filename='app.log',
-    level=logging.WARNING,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 
 
 class DownloadLogger:
@@ -137,6 +132,8 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
+        logging.info("Media downloaded successfully.")
+
         print("\n[SUCCESS] Download completed successfully!")
         print(format_divider())
         return True
@@ -146,5 +143,5 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
         logging.error(
             f"Critical failure in download_media: {e}", exc_info=True
         )
-        print("\n[ERROR] Download failed. Check 'app.log' for details.")
+        print("\n[ERROR] Download failed. Check logs for details.")
         return False

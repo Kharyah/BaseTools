@@ -1,17 +1,22 @@
 import os
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 
 from pathlib import Path
-from utils import clear_terminal, format_header
-
-from InquirerPy import inquirer
-from InquirerPy.base.control import Choice
+from utils import (
+    clear_terminal,
+    format_header,
+    get_project_root,
+    path_name_replace
+)
 
 logger = logging.getLogger(__name__)
 
-PATH_FILE_JSON = Path("data/folders_path.json")
-SRT_MODES_JSON = Path("data/srt_modes.json")
+PROJECT_ROOT = get_project_root()
+
+PATH_FILE_JSON = PROJECT_ROOT / "data" / "folders_path.json"
+SRT_MODES_JSON = PROJECT_ROOT / "data" / "srt_modes.json"
 
 JSON_FILE_MAP = {
     "path_file": PATH_FILE_JSON,
@@ -19,27 +24,53 @@ JSON_FILE_MAP = {
 }
 
 
-def get_project_root(anchor: str = "requirements.txt") -> Path:
-    """
-    Finds the project root directory by traversing
-    upwards from the current file.
-
-    :param anchor: The filename used as a landmark
-    to identify the root directory.
-    :return: A Path object pointing to the root
-    directory or the current parent.
-    """
-    current_path = Path(__file__).resolve()
-
-    # Traverse upwards through parent directories
-    # to find the project root anchor
-    for parent in [current_path] + list(current_path.parents):
-        if (parent / anchor).exists():
-            return parent
-    return current_path.parent
-
-
 def start_logging() -> None:
+    """
+    Initializes the root logger with two separate file handlers:
+    - app.log: Captures all operational info (INFO and above).
+    - errors.log: Captures only anomalies and system failures (WARNING+).
+    """
+    project_root = get_project_root()
+    log_dir = project_root / "logs"
+
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    general_log_file = log_dir / "app.log"
+    error_log_file = log_dir / "errors.log"
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    if root_logger.handlers:
+        root_logger.handlers.clear()
+
+    formatter = logging.Formatter(
+        fmt='%(asctime)s [%(levelname)s] %(module)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    # General handler (Overwritten at every execution)
+    general_handler = logging.FileHandler(
+        general_log_file, mode="w", encoding="utf-8"
+    )
+    general_handler.setLevel(logging.INFO)
+    general_handler.setFormatter(formatter)
+
+    # Alert/Error Handler (Protected against infinite growth)
+    error_handler = RotatingFileHandler(
+        error_log_file, 
+        maxBytes=2 * 1024 * 1024, 
+        backupCount=2, 
+        encoding="utf-8"
+    )
+    error_handler.setLevel(logging.WARNING)
+    error_handler.setFormatter(formatter)
+
+    # Binds both handlers to the main system logger
+    root_logger.addHandler(general_handler)
+
+
+def startt_logging() -> None:
     """
     Initializes the root logger configuration and
     sets up the application log file.
@@ -49,8 +80,7 @@ def start_logging() -> None:
     a standardized format for log entries.
     """
 
-    project_root = get_project_root()
-    log_dir = project_root / "logs"
+    log_dir = PROJECT_ROOT / "logs"
     log_file = log_dir / "app.log"
 
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -141,7 +171,7 @@ def update_path(
     data = read_path(json_name="path_file")
     new_path = str(new_path)
 
-    if not os.path.exists(new_path):
+    if os.path.exists(new_path):
         if is_output:
             data[path_name]["output"] = new_path
 
@@ -174,7 +204,8 @@ def default_input_path_choice(default: str) -> str:
     :param default: The media type key string to look up history for.
     :return: The selected directory path string.
     """
-    path_name = default.replace("_", " ").title()
+    from InquirerPy import inquirer
+    from InquirerPy.base.control import Choice
 
     clear_terminal()
     print(format_header("Select Input Path"))
@@ -184,7 +215,7 @@ def default_input_path_choice(default: str) -> str:
     paths_list.append(Choice(value="Another", name="! Select another path."))
 
     default_path = inquirer.select(
-        message=f"Select a Default {path_name}:",
+        message=f"Select a Default {path_name_replace(default)}:",
         choices=paths_list
     ).execute()
 
@@ -207,14 +238,15 @@ def default_output_path_choice(default: str) -> str:
     :param default: The media type key string to look up the output path for.
     :return: The validated target output directory path string.
     """
-    path_name = default.replace("_", " ").title()
+    from InquirerPy import inquirer
+    from InquirerPy.base.control import Choice
 
     clear_terminal()
     print(format_header("Select Output Path"))
 
     output_path = read_path(json_name="path_file", inner_key=default)
     output_path_choice = inquirer.select(
-        message=f"Select the Output {path_name}:",
+        message=f"Select the Output {path_name_replace(default)}:",
         choices=[
             Choice(
                 value=f"{output_path['output']}",
@@ -225,10 +257,10 @@ def default_output_path_choice(default: str) -> str:
     ).execute()
 
     if output_path_choice == "Another":
-        print(10*"-" + " Select Output Path " + 10*"-")
+        print(format_header("Select Output Path"))
 
         final_output_path = inquirer.filepath(
-            message=f"Select the Output {path_name}:",
+            message=f"Select the Output {path_name_replace(default)}:",
             default=str(os.path.expanduser("~")),
             only_directories=True
         ).execute()
