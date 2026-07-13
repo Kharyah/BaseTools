@@ -2,7 +2,7 @@ import shutil
 import logging
 from utils import format_divider
 
-logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def check_js_runtime() -> bool:
@@ -14,7 +14,7 @@ def check_js_runtime() -> bool:
     # yt-dlp requires a JS runtime to execute deciphering scripts for YT URLs
     if runtime_deno or runtime_node:
         if not runtime_deno:
-            logging.warning(
+            logger.warning(
                 "Node.js detected instead of Deno. Deno is the recommended"
                 "runtime for yt-dlp."
             )

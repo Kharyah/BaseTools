@@ -12,6 +12,8 @@ from config.settings import (
     start_logging
 )
 
+logger = logging.getLogger(__name__)
+
 CALL_FUNCTIONS_MAIN = {
     "Media Downloader": media_downloader,
     "Image Converter": image_converter,
@@ -27,6 +29,7 @@ MENU_CHOICES = (
 
 def main() -> None:
     while True:
+        clear_terminal()
         user_choice = inquirer.select(
             message="Select Tool:",
             choices=MENU_CHOICES,
@@ -40,16 +43,11 @@ def main() -> None:
             print("Closing...")
             break
 
-        clear_terminal()
-
 
 if __name__ == "__main__":
     start_logging()
     create_folders_path()
     create_srt_modes_path()
 
-    logging.getLogger(__name__)
-    logging.info("BaseTools Started.")
-
-    clear_terminal()
+    logger.info("Application context initiated successfully.")
     main()

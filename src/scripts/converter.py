@@ -1,4 +1,3 @@
-import os
 import logging
 
 from PIL import Image
@@ -17,10 +16,11 @@ def check_image_format(file_path: str) -> bool:
     """Checks if the file extension is supported."""
     path = Path(file_path)
 
-    # Slices off the leading dot to match SUPPORTED_FORMATS
-    if path.suffix[1:].upper() not in SUPPORTED_FORMATS:
+    if not path.is_file():
         return False
-    return True
+
+    suffix = path.suffix.lstrip(".").upper()
+    return suffix in SUPPORTED_FORMATS
 
 
 def convert_image_format(
@@ -44,14 +44,12 @@ def convert_image_format(
     if target_format not in SUPPORTED_FORMATS:
         raise ValueError(f"Unsupported format: '{target_format}'")
 
-    # Extract the base file name without its original extension
-    base_name = os.path.splitext(os.path.basename(input_path))[0]
+    input_path_obj = Path(input_path)
+    output_dir_obj = Path(output_dir)
 
-    # Define the correct extension for the output file
+    base_name = input_path_obj.stem
     extension = "jpg" if target_format == "JPEG" else target_format.lower()
-
-    # Construct the full final output path automatically
-    final_output_path = os.path.join(output_dir, f"{base_name}.{extension}")
+    final_output_path = output_dir_obj / f"{base_name}.{extension}"
 
     try:
         with Image.open(input_path) as img:
@@ -61,9 +59,7 @@ def convert_image_format(
                 img = img.convert("RGB")
 
             # Ensure the output directory exists
-            os.makedirs(output_dir, exist_ok=True)
-
-            # Save using the automatically generated full path
+            output_dir_obj.mkdir(parents=True, exist_ok=True)
             img.save(final_output_path, format=target_format)
 
     except IOError as e:

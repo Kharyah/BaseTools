@@ -1,8 +1,5 @@
 import os
-import sys
-
 from pathlib import Path
-from InquirerPy.base.control import Choice
 
 TERMINAL_WIDTH = 40  # Global terminal styling constant
 
@@ -10,10 +7,8 @@ TERMINAL_WIDTH = 40  # Global terminal styling constant
 def get_app_data_dir() -> Path:
     """
     Returns the absolute path to the application's dedicated data directory.
-    Saves to the user's home directory inside an isolated folder (.basetools).
     """
-    data_dir = Path.home() / ".basetools"
-    return data_dir
+    return Path.home() / ".basetools"
 
 
 def clear_terminal() -> None:
@@ -23,19 +18,21 @@ def clear_terminal() -> None:
 
 def prompt_to_continue() -> None:
     """Create a follow-up or exit question."""
-    if input("Press Enter to continue or 'q' to exit... ").lower() == "q":
+    choice = input(
+        "Press Enter to continue or 'q' to exit... "
+    ).strip().lower()
+    if choice == "q":
         clear_terminal()
-        sys.exit(1)
+        return False
+    return True
+
+    """if input("Press Enter to continue or 'q' to exit... ").lower() == "q":
+        clear_terminal()
+        sys.exit(1)"""
 
 
 def path_name_replace(path_name: str) -> str:
     return path_name.replace("_", " ").title()
-
-
-def create_choice_list(types_list: list) -> list:
-    """Create a list for choices in the InquirerPy in a practical way."""
-    format_list = [Choice(value=x, name=f"  > {x}") for x in types_list]
-    return format_list
 
 
 def format_header(title: str, width: int = TERMINAL_WIDTH) -> str:

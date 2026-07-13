@@ -1,4 +1,3 @@
-import os
 import yt_dlp
 import logging
 
@@ -6,12 +5,8 @@ from utils import format_divider
 
 logger = logging.getLogger(__name__)
 
-
-class MyQuietLogger:
-    """Custom silent logger to suppress yt-dlp output during URL validation."""
-    def debug(self, msg): pass
-    def warning(self, msg): pass
-    def error(self, msg): pass
+silent_yt_logger = logging.getLogger("yt_dlp_silent")
+silent_yt_logger.setLevel(logging.CRITICAL)
 
 
 def check_url(url: str) -> bool:
@@ -21,23 +16,24 @@ def check_url(url: str) -> bool:
         "quiet": True,
         "no_warnings": True,
         "extract_flat": True,
-        "logger": MyQuietLogger(),
+        "logger": silent_yt_logger
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.extract_info(url, download=False)
             return True
-
+    except yt_dlp.utils.DownloadError as exc:
+        logger.warning(f"URL validation failed: {exc}")
+        return False
     except Exception as exc:
-        logging.warning(f"Error checking URL: {exc}")
+        logging.error(f"Error checking URL: {exc}")
         return False
 
 
 class DownloadLogger:
     """
-    Redirects yt-dlp internal messages to Python's logging system
-    instead of the terminal.
+    Redirects yt-dlp internal messages to Python's logging system.
     """
     def debug(self, msg):
         # The progressive download bar outputs via debug.
@@ -46,34 +42,19 @@ class DownloadLogger:
 
     def warning(self, msg):
         # Sends warnings directly to the app.log file
-        logging.warning(f"[yt-dlp WARNING] {msg}")
+        logging.warning(f"[yt-dlp] {msg}")
 
     def error(self, msg):
         # Sends critical errors directly to the app.log file
-        logging.error(f"[yt-dlp ERROR] {msg}")
+        logging.error(f"[yt-dlp] {msg}")
 
 
 def show_progress_percentage(d: dict) -> None:
     """Calculates and displays only the download percentage in the CLI."""
-    if d.get('status') == 'downloading':
-        total_bytes = (
-            d.get('total_bytes')
-            or d.get('total_bytes_estimate')
-            or 0
+    if d.get("status") == "downloading":
+        print(
+            f"Downloading Progress: {d.get('_percent_srt', '0.0%')}", end="\r"
         )
-        downloaded_bytes = d.get('downloaded_bytes', 0)
-
-        if total_bytes > 0:
-            percentage = (downloaded_bytes / total_bytes) * 100
-            print(
-                f"Donwloading Progress: {percentage:.1f}%",
-                end="\r", flush=True
-            )
-
-    elif d.get('status') == 'finished':
-        # Prints a newline so the next [SUCCESS]
-        # message doesn't overwrite the 100%
-        print()
 
 
 def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
@@ -83,21 +64,19 @@ def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
     :param output_path: Path directory where the media will be saved.
     :param file_type: The desired media format (e.g., 'WAV', 'MP3', 'MP4').
     """
-    outtmpl_path = os.path.join(output_path, '%(title)s.%(ext)s')
 
     ydl_opts = {
-        'outtmpl': outtmpl_path,
-        'remote_components': 'ejs:github',
-        'quiet': True,
-        'no_warnings': True,
-        'noprogress': True,
+        'outtmpl': str(output_path / "%(title)s.%(ext)s"),
         'logger': DownloadLogger(),
         'progress_hooks': [show_progress_percentage],
     }
 
     if file_type.lower() == 'mp4':
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
-        ydl_opts['merge_output_format'] = 'mp4'
+        ydl_opts["format"] = (
+            "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
+            "best[ext=mp4]/"
+            "best"
+        )
     elif file_type.lower() in ['mp3', 'wav']:
         ydl_opts['format'] = 'bestaudio/best'
         ydl_opts['postprocessors'] = [{
@@ -119,7 +98,7 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
     :param output_path: The directory path where the file will be saved.
     :param file_type: The desired media file format.
     """
-    os.makedirs(output_path, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
 
     try:
         ydl_opts = get_yt_dlp_options(output_path, file_type)
@@ -132,16 +111,13 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        logging.info("Media downloaded successfully.")
-
+        logger.info("Media downloaded successfully.")
         print("\n[SUCCESS] Download completed successfully!")
         print(format_divider())
         return True
 
     except Exception as e:
         # Unexpected crashes are also saved to the log file
-        logging.error(
-            f"Critical failure in download_media: {e}", exc_info=True
-        )
+        logger.error(f"Download execution failed: {e}")
         print("\n[ERROR] Download failed. Check logs for details.")
         return False

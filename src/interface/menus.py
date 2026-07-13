@@ -1,4 +1,3 @@
-import os
 import logging
 
 from pathlib import Path
@@ -7,12 +6,11 @@ from InquirerPy.base.control import Choice
 
 from scripts.converter import check_image_format, convert_image_format
 from scripts.downloader import check_url, download_media
-from config.depedences import check_js_runtime
+from config.dependencies import check_js_runtime
 
 from utils import (
     clear_terminal,
     prompt_to_continue,
-    create_choice_list,
     format_header,
     format_divider,
     path_name_replace
@@ -40,39 +38,36 @@ FUNCTIONS_FORMAT_CHECK_CALL = {
 }
 
 
-def path_media_choice(path: str, media_type: str) -> str:
-    logging.info("Started Path Media Select.")
-
+def path_media_choice(initial_path: str, media_type: str) -> str:
+    logger.info("Started Path Media Select.")
     print(format_header("Select Path"))
 
-    current_path_directory = path
+    current_path_directory = initial_path
     check_media_format = FUNCTIONS_FORMAT_CHECK_CALL[media_type]
 
     while True:
-        file_path = inquirer.filepath(
+        file_path_str = inquirer.filepath(
             message=f"Select the {path_name_replace(media_type)} File:",
             default=str(current_path_directory),
             validate=check_media_format
         ).execute()
 
-        if os.path.isfile(file_path):
-            update_path(path_name=media_type, new_path=Path(file_path).parent)
+        file_path = Path(file_path_str)
+
+        if file_path.is_file():
+            update_path(path_name=media_type, new_path=file_path.parent)
             return file_path
 
-        # If a directory is selected, update the current
-        # path to allow nested browsing.
-        elif os.path.isdir(file_path):
+        elif file_path.is_dir():
             current_path_directory = file_path
             clear_terminal()
 
 
 def media_downloader() -> None:
-    logging.info("Started Media Downloader Logic.")
+    logger.info("Started Media Downloader Logic.")
 
-    # Guard clause: Ensure JavaScript runtime is available
-    # before invoking yt-dlp.
     if not check_js_runtime():
-        return None
+        return
 
     output_path = default_output_path_choice("DOWNLOAD_PATH")
     checked_url = None
@@ -90,15 +85,15 @@ def media_downloader() -> None:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             print(format_divider())
 
-            prompt_to_continue()
-            continue
+            if not prompt_to_continue():
+                return
 
-    file_format_list = create_choice_list(["mp3", "mp4", "wav"])
-    file_format_list.append(Choice(value="Return", name="! Return"))
+    choices = [Choice(value=x, name=f"  > {x}") for x in ["mp3", "mp4", "wav"]]
+    choices.append(Choice(value="Return", name="! Return"))
 
     file_format = inquirer.select(
         message="Select The File Format (It'll be the best quality possible):",
-        choices=file_format_list
+        choices=choices
     ).execute()
 
     if file_format == "Return":
@@ -113,25 +108,24 @@ def media_downloader() -> None:
 
 
 def image_converter() -> None:
-    logging.info("Started Image Converter Logic.")
-
+    logger.info("Started Image Converter Logic.")
     print(format_header("Image Converter"))
-    output_path = default_output_path_choice("IMAGE_PATH")
 
-    # Map media types to their respective validator functions
+    output_path = default_output_path_choice("IMAGE_PATH")
+    input_path_base = default_input_path_choice("IMAGE_PATH")
+
     file_path = path_media_choice(
-        path=default_input_path_choice("IMAGE_PATH"),
+        initial_path=input_path_base,
         media_type="IMAGE_PATH"
     )
 
-    file_format_list = create_choice_list(
-        ["JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"]
-    )
-    file_format_list.append(Choice(value="Return", name="! Return."))
+    formats = ["JPEG", "JPG", "PNG", "WEBP", "BMP", "GIF", "TIFF", "ICO"]
+    choices = [Choice(value=x, name=f"  > {x}") for x in formats]
+    choices.append(Choice(value="Return", name="! Return."))
 
     file_format = inquirer.select(
         message="Select The File Format:",
-        choices=file_format_list
+        choices=choices
     ).execute()
 
     if file_format == "Return":
@@ -146,24 +140,24 @@ def image_converter() -> None:
 
 
 def srt_generator() -> None:
-    logging.info("Started Srt Generator Logic.")
-
+    logger.info("Started Srt Generator Logic.")
     print(format_header("SRT Generator"))
-    output_path = default_output_path_choice("SRT_PATH")
 
-    # Map media types to their respective validator functions
+    output_path = default_output_path_choice("SRT_PATH")
+    input_path_base = default_input_path_choice("SRT_PATH")
+
     file_path = path_media_choice(
-        path=default_input_path_choice("SRT_PATH"),
+        initial_path=input_path_base,
         media_type="SRT_PATH"
     )
 
-    srt_all_modes = read_path(json_name="srt_modes")
-    srt_mode = create_choice_list(list(srt_all_modes.keys()))
-    srt_mode.append(Choice(value="Return", name="! Return."))
+    modes = list(read_path(json_name="srt_modes"))
+    choices = [Choice(value=x, name=f"  > {x}") for x in modes.keys()]
+    choices.append(Choice(value="Return", name="! Return."))
 
     mode_choice = inquirer.select(
         message="Select the SRT mode:",
-        choices=srt_mode,
+        choices=choices,
     ).execute()
 
     if mode_choice == "Return":
@@ -191,5 +185,4 @@ def srt_generator() -> None:
             model_size="base",
             language=language_choice,
         )
-
         prompt_to_continue()
