@@ -7,16 +7,16 @@ from pathlib import Path
 from utils import (
     clear_terminal,
     format_header,
-    get_project_root,
-    path_name_replace
+    path_name_replace,
+    get_app_data_dir
 )
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = get_project_root()
+APP_DATA_DIR = get_app_data_dir()
 
-PATH_FILE_JSON = PROJECT_ROOT / "data" / "folders_path.json"
-SRT_MODES_JSON = PROJECT_ROOT / "data" / "srt_modes.json"
+PATH_FILE_JSON = APP_DATA_DIR / "data" / "folders_path.json"
+SRT_MODES_JSON = APP_DATA_DIR / "data" / "srt_modes.json"
 
 JSON_FILE_MAP = {
     "path_file": PATH_FILE_JSON,
@@ -30,9 +30,10 @@ def start_logging() -> None:
     - app.log: Captures all operational info (INFO and above).
     - errors.log: Captures only anomalies and system failures (WARNING+).
     """
-    project_root = get_project_root()
-    log_dir = project_root / "logs"
+    app_data = get_app_data_dir()
+    log_dir = app_data / "logs"
 
+    # Cria a estrutura inteira de uma vez (~/.basetools/logs)
     log_dir.mkdir(parents=True, exist_ok=True)
 
     general_log_file = log_dir / "app.log"
@@ -58,9 +59,9 @@ def start_logging() -> None:
 
     # Alert/Error Handler (Protected against infinite growth)
     error_handler = RotatingFileHandler(
-        error_log_file, 
-        maxBytes=2 * 1024 * 1024, 
-        backupCount=2, 
+        error_log_file,
+        maxBytes=2 * 1024 * 1024,
+        backupCount=2,
         encoding="utf-8"
     )
     error_handler.setLevel(logging.WARNING)
@@ -70,40 +71,6 @@ def start_logging() -> None:
     root_logger.addHandler(general_handler)
 
 
-def startt_logging() -> None:
-    """
-    Initializes the root logger configuration and
-    sets up the application log file.
-
-    Creates a 'logs' directory at the project root if it does not exist,
-    clears any pre-existing handlers to prevent duplication, and defines
-    a standardized format for log entries.
-    """
-
-    log_dir = PROJECT_ROOT / "logs"
-    log_file = log_dir / "app.log"
-
-    log_dir.mkdir(parents=True, exist_ok=True)
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-
-    # FORCE CLEANUP: Remove existing handlers to prevent duplicate log entries
-    if root_logger.handlers:
-        root_logger.handlers.clear()
-
-    formatter = logging.Formatter(
-        fmt='%(asctime)s [%(levelname)s] %(module)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-
-    # FileHandler Configuration
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setFormatter(formatter)
-
-    root_logger.addHandler(file_handler)
-
-
 def create_folders_path() -> None:
     """
     Creates the default path configuration JSON file if it does not exist.
@@ -111,6 +78,7 @@ def create_folders_path() -> None:
     Initializes the file with standard systemic paths for images, downloads,
     and SRT files formatted to hold recent inputs and the current output.
     """
+    PATH_FILE_JSON.parent.mkdir(parents=True, exist_ok=True)
 
     if not PATH_FILE_JSON.exists():
         default_paths = {
@@ -127,10 +95,43 @@ def create_folders_path() -> None:
                 "output": str(Path.home() / "Documents")
             }
         }
+
         with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
             json.dump(default_paths, f, indent=4)
 
     logging.info("Folder_path.json Created sucessful.")
+    return None
+
+
+def create_srt_modes_path() -> None:
+    """
+    """
+    SRT_MODES_JSON.parent.mkdir(parents=True, exist_ok=True)
+
+    if not SRT_MODES_JSON.exists():
+        srt_modes = {
+            "netflix": {
+                "max_chars": 42,
+                "max_words": 14
+            },
+            "youtube": {
+                "max_chars": 36,
+                "max_words": 10
+            },
+            "vertical_shorts": {
+                "max_chars": 20,
+                "max_words": 3
+            },
+            "vertical_shorts_harder": {
+                "max_chars": 15,
+                "max_words": 2
+            }
+        }
+
+        with open(SRT_MODES_JSON, "w", encoding="utf-8") as f:
+            json.dump(srt_modes, f, indent=4)
+
+    logging.info("Srt_modes.json Created sucessful.")
     return None
 
 

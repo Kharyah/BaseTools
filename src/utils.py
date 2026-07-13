@@ -7,24 +7,13 @@ from InquirerPy.base.control import Choice
 TERMINAL_WIDTH = 40  # Global terminal styling constant
 
 
-def get_project_root(anchor: str = "requirements.txt") -> Path:
+def get_app_data_dir() -> Path:
     """
-    Finds the project root directory by traversing
-    upwards from the current file.
-
-    :param anchor: The filename used as a landmark
-    to identify the root directory.
-    :return: A Path object pointing to the root
-    directory or the current parent.
+    Returns the absolute path to the application's dedicated data directory.
+    Saves to the user's home directory inside an isolated folder (.basetools).
     """
-    current_path = Path(__file__).resolve()
-
-    # Traverse upwards through parent directories
-    # to find the project root anchor
-    for parent in [current_path] + list(current_path.parents):
-        if (parent / anchor).exists():
-            return parent
-    return current_path.parent
+    data_dir = Path.home() / ".basetools"
+    return data_dir
 
 
 def clear_terminal() -> None:

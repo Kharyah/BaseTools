@@ -6,7 +6,11 @@ from InquirerPy.base.control import Choice
 from utils import clear_terminal
 from interface.menus import media_downloader, image_converter, srt_generator
 
-from config.settings import create_folders_path, start_logging
+from config.settings import (
+    create_folders_path,
+    create_srt_modes_path,
+    start_logging
+)
 
 CALL_FUNCTIONS_MAIN = {
     "Media Downloader": media_downloader,
@@ -42,6 +46,7 @@ def main() -> None:
 if __name__ == "__main__":
     start_logging()
     create_folders_path()
+    create_srt_modes_path()
 
     logging.getLogger(__name__)
     logging.info("BaseTools Started.")
