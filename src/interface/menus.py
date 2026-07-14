@@ -84,9 +84,7 @@ def media_downloader() -> None:
         else:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             print(format_divider())
-
-            if not prompt_to_continue():
-                return
+            prompt_to_continue()
 
     choices = [Choice(value=x, name=f"  > {x}") for x in ["mp3", "mp4", "wav"]]
     choices.append(Choice(value="Return", name="! Return"))
@@ -152,7 +150,7 @@ def srt_generator() -> None:
     )
 
     modes = list(read_path(json_name="srt_modes"))
-    choices = [Choice(value=x, name=f"  > {x}") for x in modes.keys()]
+    choices = [Choice(value=x, name=f"  > {x}") for x in modes]
     choices.append(Choice(value="Return", name="! Return."))
 
     mode_choice = inquirer.select(

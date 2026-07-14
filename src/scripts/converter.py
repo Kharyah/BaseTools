@@ -66,7 +66,7 @@ def convert_image_format(
         # Wrap the low-level Pillow/OS exception into a clear application error
         raise IOError(f"Failed to process the image conversion: {e}")
 
-    logging.info("Image converted successfully.")
+    logger.info("Image converted successfully.")
 
     print(format_divider())
     print(f"Image successfully converted to {target_format}.")

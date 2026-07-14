@@ -111,7 +111,7 @@ def generate_custom_split_srt(
         result
         .split_by_length(max_chars=max_chars, max_words=max_words)
         # highlight_color=None removes all HTML color tags from the SRT output
-        .to_srt_vtt(final_output, word_level=False)
+        .to_srt_vtt(str(final_output), word_level=False)
     )
 
     logger.info("SRT Successfully Generated.")

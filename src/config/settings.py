@@ -158,20 +158,30 @@ def update_path(
     new_path_str = str(new_path)
 
     if new_path.exists():
+        has_changes = False
+
         if is_output:
-            data[path_name]["output"] = new_path_str
+            if data[path_name]["output"] != new_path_str:
+                data[path_name]["output"] = new_path_str
+                has_changes = True
+
+                logger.info(f"{new_path_str} added in {path_name} output.")
 
         else:
-            target_queue = deque(data[path_name]["inputs"])
+            inputs_list = data[path_name].setdefault("inputs", [])
 
-            if new_path not in target_queue:
-                target_queue.append(new_path_str)
-            data[path_name]["inputs"] = list(target_queue)
+            if new_path_str not in inputs_list:
+                queue = deque(inputs_list, maxlen=3)
+                queue.append(new_path_str)
 
-        with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+                data[path_name]["inputs"] = list(queue)
+                has_changes = True
 
-        logger.info(f"{new_path_str} added in {path_name}.")
+                logger.info(f"{new_path_str} added in {path_name} inputs.")
+
+        if has_changes:
+            with open(PATH_FILE_JSON, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
 
 
 def default_input_path_choice(default: str) -> str:
@@ -239,7 +249,7 @@ def default_output_path_choice(default: str) -> str:
 
         final_output = inquirer.filepath(
             message=f"Select the Output {path_name_replace(default)}:",
-            default=str(Path.hone()),
+            default=str(Path.home()),
             only_directories=True
         ).execute()
 

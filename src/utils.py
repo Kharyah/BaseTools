@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 TERMINAL_WIDTH = 40  # Global terminal styling constant
@@ -21,14 +22,14 @@ def prompt_to_continue() -> None:
     choice = input(
         "Press Enter to continue or 'q' to exit... "
     ).strip().lower()
+
     if choice == "q":
         clear_terminal()
+        print("\nBaseTools was closed!")
+        sys.exit(0)
+
         return False
     return True
-
-    """if input("Press Enter to continue or 'q' to exit... ").lower() == "q":
-        clear_terminal()
-        sys.exit(1)"""
 
 
 def path_name_replace(path_name: str) -> str:
