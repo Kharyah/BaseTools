@@ -77,14 +77,33 @@ def media_downloader() -> None:
         print(format_header("Media Downloader"))
 
         url = input("Enter a URL: ")
+        if not url:
+            continue
 
-        if check_url(url):
-            checked_url = url
-            break
-        else:
+        is_valid, is_playlist = check_url(url)
+
+        if not is_valid:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             print(format_divider())
             prompt_to_continue()
+            continue
+
+        if is_playlist:
+            choices = [Choice(value=x, name=f"  > {x}") for x in ["Yes", "No"]]
+
+            select = inquirer.select(
+                message=(
+                    "This URL is a playlist (all videos will be downloaded)..."
+                    "Do you want to continue? "
+                ),
+                choices=choices
+            ).execute()
+
+            if select == "No":
+                continue
+
+        checked_url = url
+        break
 
     choices = [Choice(value=x, name=f"  > {x}") for x in ["mp3", "mp4", "wav"]]
     choices.append(Choice(value="Return", name="! Return"))

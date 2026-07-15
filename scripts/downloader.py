@@ -9,8 +9,13 @@ silent_yt_logger = logging.getLogger("yt_dlp_silent")
 silent_yt_logger.setLevel(logging.CRITICAL)
 
 
-def check_url(url: str) -> bool:
-    """Checks if the URL is valid and reachable by yt-dlp."""
+def check_url(url: str) -> tuple[bool, bool]:
+    """
+    Validates if the URL is reachable and checks if it represents a playlist.
+
+    :param url: The target URL to check.
+    :return: A tuple containing (is_valid, is_playlist).
+    """
     ydl_opts = {
         "simulate": True,
         "quiet": True,
@@ -19,16 +24,32 @@ def check_url(url: str) -> bool:
         "logger": silent_yt_logger
     }
 
+    # Print a checking status to the user
+    print("[INFO] Checking URL status... Please wait.", end="\r", flush=True)
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.extract_info(url, download=False)
-            return True
+            # Extract metadata without downloading
+            info = ydl.extract_info(url, download=False)
+
+            # Clear the "Checking..." line in the console
+            print(" " * 50, end="\r")
+
+            if not info:
+                return False, False
+
+            # Check if the extracted entity is a playlist
+            is_playlist = info.get("_type") == "playlist"
+            return True, is_playlist
+
     except yt_dlp.utils.DownloadError as exc:
+        print(" " * 50, end="\r")
         logger.warning(f"URL validation failed: {exc}")
-        return False
+        return False, False
     except Exception as exc:
+        print(" " * 50, end="\r")
         logging.error(f"Error checking URL: {exc}")
-        return False
+        return False, False
 
 
 class DownloadLogger:
@@ -36,9 +57,9 @@ class DownloadLogger:
     Redirects yt-dlp internal messages to Python's logging system.
     """
     def debug(self, msg):
-        # The progressive download bar outputs via debug.
-        # We pass (do nothing) so it doesn't flood our log file.
-        pass
+        if msg.startswith("[download]"):
+            return  # Safety exit for progressive bar logs
+        logger.debug(f"[yt-dlp-debug] {msg}")
 
     def warning(self, msg):
         # Sends warnings directly to the app.log file
@@ -50,11 +71,43 @@ class DownloadLogger:
 
 
 def show_progress_percentage(d: dict) -> None:
-    """Calculates and displays only the download percentage in the CLI."""
-    if d.get("status") == "downloading":
-        print(
-            f"Downloading Progress: {d.get('_percent_srt', '0.0%')}", end="\r"
+    """
+    Displays the current download progress percentage and video title.
+    """
+    if d.get("status") != "downloading":
+        return
+
+    # 1. Extract percentage string with a basic calculation fallback
+    percent_str = d.get("_percent_str")
+    if not percent_str:
+        total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+        downloaded = d.get("downloaded_bytes", 0)
+        percent_str = (
+            f"{(downloaded / total) * 100:.1f}%" if total > 0 else "0.0%"
         )
+
+    percent_str = percent_str.strip()
+
+    # 2. Extract metadata
+    info = d.get("info_dict", {})
+    title = info.get("title", "Unknown Title")
+    idx = info.get("playlist_index")
+    total_entries = info.get("n_entries")
+
+    # 3. Truncate title using slicing (safe for standard strings)
+    if len(title) > 40:
+        title = f"{title[:37]}..."
+
+    # 4. Format string using f-strings based on playlist presence
+    if idx is not None and total_entries is not None:
+        prefix = f"[Video {idx}/{total_entries}]"
+    else:
+        prefix = "[Downloading]"
+
+    output = f"{prefix} {title} -> {percent_str}"
+
+    # 5. Flush terminal line using ljust to clear trailing remnants
+    print(f"\r{output.ljust(100)}", end="", flush=True)
 
 
 def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
@@ -69,6 +122,9 @@ def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
         'outtmpl': str(output_path / "%(title)s.%(ext)s"),
         'logger': DownloadLogger(),
         'progress_hooks': [show_progress_percentage],
+        'quiet': True,
+        'no_warnings': True,
+        'noprogress': True
     }
 
     if file_type.lower() == 'mp4':

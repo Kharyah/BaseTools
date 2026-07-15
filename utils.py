@@ -25,7 +25,7 @@ def prompt_to_continue() -> None:
 
     if choice == "q":
         clear_terminal()
-        print("\nBaseTools was closed!")
+        print("BaseTools was closed!")
         sys.exit(0)
 
         return False
