@@ -14,3 +14,8 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# Ignore Pyinstaller files
+build/
+dist/
+*.spec
