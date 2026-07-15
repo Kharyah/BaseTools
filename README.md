@@ -1,23 +1,29 @@
-# BaseTools
+# 🛠️ BaseTools
 
-A simple Command Line Interface (CLI) application built in Python to centralize utility scripts that I use in my daily life (like image conversion, media downloading, and text generation).
+A powerful and interactive Command Line Interface (CLI) application built in Python to centralize utility scripts that I use in my daily life.
 
-## Project Goal
-The main purpose of this repository is to store my personal tools, track my coding progress over time, and keep a history of my changes using Git. 
+---
 
-## Current Status: In Development
-* **Work in Progress:** This project is actively being developed and refactored.
-* **Beginner Friendly:** I am learning and improving the architecture as I go. If you find basic bugs, messy code, or structural issues, just ignore them. I don't mind feedback, but the priority here is my own learning process.
+## 🚀 Key Features
 
-## Built With
-* **Python 3** (Core logic)
-* **InquirerPy** (For the interactive CLI menus)
-* **Pathlib / JSON** (For dynamic path and configuration management)
+* **Media Downloader:** Fast audio/video downloading from YouTube and other platforms (powered by `yt-dlp`).
+* **Image Converter:** Seamless format conversion (PNG, JPG, WEBP, BMP, etc.) using `Pillow`.
+* **SRT Subtitle Generator:** Automatic transcription and translation with smart segmentation (powered by `stable-whisper`).
 
-## How to Run
-Right now, the only way to run the app is by cloning the repository locally and executing the main file:
+---
 
-1. Clone the repository.
-2. Run the main script: `python src/main.py`
+## 📦 How to Use (No Python Required)
 
-*Note: This setup is temporary. The goal is to configure this project later so it can be installed and executed as a global CLI command from anywhere in the terminal.*
+The easiest way to run **BaseTools** is by downloading the pre-compiled version for Windows:
+
+1. Go to the [Releases](https://github.com/Kharyah/BaseTools/releases) page.
+2. Download the latest **`basetools-windows-vX.Y.Z.zip`** file.
+3. Extract the ZIP archive anywhere on your computer.
+4. **Choose your preferred way to run:**
+   * **Easy Way:** Double-click the `basetools.bat` file. A terminal window will open, launching the application automatically.
+   * **Terminal Way (Global):** If you want to type `basetools` from any terminal directory, move the `basetools.exe` to a permanent folder and add that folder to your system's **`PATH`** environment variable.
+
+### ⚠️ External Requirements
+Since this tool relies on command-line utilities for heavy media processing, make sure you have these installed on your system:
+* **FFmpeg** (Required for processing audio and downloads)
+* **Deno** or **Node.js** (Required by `yt-dlp` to parse streaming URLs)
