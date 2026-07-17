@@ -1,4 +1,3 @@
-import yt_dlp
 import logging
 
 from utils import format_divider
@@ -16,6 +15,8 @@ def check_url(url: str) -> tuple[bool, bool]:
     :param url: The target URL to check.
     :return: A tuple containing (is_valid, is_playlist).
     """
+    import yt_dlp
+
     ydl_opts = {
         "simulate": True,
         "quiet": True,
@@ -154,6 +155,8 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
     :param output_path: The directory path where the file will be saved.
     :param file_type: The desired media file format.
     """
+    import yt_dlp
+
     output_path.mkdir(parents=True, exist_ok=True)
 
     try:

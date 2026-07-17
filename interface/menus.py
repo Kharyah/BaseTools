@@ -1,6 +1,5 @@
 import logging
 
-from pathlib import Path
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
@@ -15,7 +14,6 @@ from utils import (
     format_divider,
     path_name_replace
 )
-
 
 from scripts.generation import (
     check_audio_format,
@@ -39,6 +37,8 @@ FUNCTIONS_FORMAT_CHECK_CALL = {
 
 
 def path_media_choice(initial_path: str, media_type: str) -> str:
+    from pathlib import Path
+
     logger.info("Started Path Media Select.")
     print(format_header("Select Path"))
 

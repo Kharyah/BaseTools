@@ -1,6 +1,5 @@
 import logging
 
-from PIL import Image
 from pathlib import Path
 from utils import format_divider
 
@@ -36,6 +35,8 @@ def convert_image_format(
     :param output_dir: Path directory where the image will be saved.
     :param target_format: The desired image format (e.g., 'PNG', 'JPEG').
     """
+    from PIL import Image
+
     # Normalize format
     target_format = target_format.upper()
     if target_format == "JPG":

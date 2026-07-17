@@ -1,10 +1,5 @@
-import json
 import logging
 
-from logging.handlers import RotatingFileHandler
-
-from collections import deque
-from pathlib import Path
 from utils import (
     clear_terminal,
     format_header,
@@ -30,6 +25,8 @@ def start_logging() -> None:
     - app.log: Captures all operational info (INFO and above).
     - errors.log: Captures only anomalies and system failures (WARNING+).
     """
+    from logging.handlers import RotatingFileHandler
+
     log_dir = APP_DATA_DIR / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -73,6 +70,9 @@ def create_folders_path() -> None:
     """
     Creates the default path configuration JSON file if it does not exist.
     """
+    import json
+    from pathlib import Path
+
     PATH_FILE_JSON.parent.mkdir(parents=True, exist_ok=True)
 
     if not PATH_FILE_JSON.exists():
@@ -99,6 +99,8 @@ def create_folders_path() -> None:
 
 def create_srt_modes_path() -> None:
     """Creates default SRT mode profiles."""
+    import json
+
     SRT_MODES_JSON.parent.mkdir(parents=True, exist_ok=True)
 
     if not SRT_MODES_JSON.exists():
@@ -131,6 +133,8 @@ def read_path(
     json_name: str,
     inner_key: str | None = None
 ) -> dict | list | str:
+    import json
+
     with open(JSON_FILE_MAP[json_name], "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -153,6 +157,8 @@ def update_path(
     :param is_output: True if updating the output target,
     False if updating input history.
     """
+    import json
+    from collections import deque
 
     data = read_path(json_name="path_file")
     new_path_str = str(new_path)
@@ -195,6 +201,7 @@ def default_input_path_choice(default: str) -> str:
     :param default: The media type key string to look up history for.
     :return: The selected directory path string.
     """
+    from pathlib import Path
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
 
@@ -224,6 +231,7 @@ def default_output_path_choice(default: str) -> str:
     :param default: The media type key string to look up the output path for.
     :return: The validated target output directory path string.
     """
+    from pathlib import Path
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
 

@@ -1,5 +1,5 @@
-import shutil
 import logging
+
 from utils import format_divider
 
 logger = logging.getLogger(__name__)
@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 
 def check_js_runtime() -> bool:
     """Checks if a valid JavaScript runtime is installed in the environment."""
+    import shutil
+
     # Look for Deno or Node.js executables in the system's PATH
     runtime_deno = shutil.which("deno")
     runtime_node = shutil.which("node")

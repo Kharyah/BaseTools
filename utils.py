@@ -1,5 +1,3 @@
-import os
-import sys
 from pathlib import Path
 
 TERMINAL_WIDTH = 40  # Global terminal styling constant
@@ -14,11 +12,15 @@ def get_app_data_dir() -> Path:
 
 def clear_terminal() -> None:
     """Clears the terminal screen based on the Operating System."""
+    import os
+
     os.system("cls" if os.name == "nt" else "clear")
 
 
 def prompt_to_continue() -> None:
     """Create a follow-up or exit question."""
+    import sys
+
     choice = input(
         "Press Enter to continue or 'q' to exit... "
     ).strip().lower()

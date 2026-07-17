@@ -1,5 +1,4 @@
 import logging
-import stable_whisper
 
 from pathlib import Path
 from typing import Optional
@@ -36,6 +35,7 @@ def _get_whisper_model(model_size: str):
     Retrieves the Whisper model instance from cache,
     or loads it if it doesn't exist yet (Lazy Loading Pattern).
     """
+    import stable_whisper
     global _whisper_model_cache
 
     if (
