@@ -37,6 +37,7 @@ def main() -> None:
         ).execute()
 
         if user_choice in CALL_FUNCTIONS_MAIN.keys():
+            clear_terminal()
             CALL_FUNCTIONS_MAIN[user_choice]()
 
         else:

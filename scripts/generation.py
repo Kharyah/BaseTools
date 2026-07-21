@@ -30,6 +30,12 @@ def get_supported_whisper_languages() -> dict:
     return LANGUAGES
 
 
+def get_supported_whisper_load_models() -> list:
+    """Returns a list of all load models supported by the Whisper model."""
+    from whisper import available_models
+    return [model for model in available_models() if not model.endswith(".en")]
+
+
 def _get_whisper_model(model_size: str):
     """
     Retrieves the Whisper model instance from cache,
@@ -47,7 +53,8 @@ def _get_whisper_model(model_size: str):
         )
         return _whisper_model_cache["instance"]
 
-    print(f"\n[INFO] Loading Whisper model '{model_size}' into memory...")
+    print(format_divider())
+    print(f"[INFO] Loading Whisper model '{model_size}' into memory...")
     print("[INFO] This might take a few seconds on the first run...")
 
     model = stable_whisper.load_model(model_size)
@@ -72,7 +79,6 @@ def generate_custom_split_srt(
     using pathlib and a cached Whisper model.
     """
     media_path_obj = Path(media_path)
-
     model = _get_whisper_model(model_size)
 
     srt_config = read_path(json_name="srt_modes", inner_key=srt_mode)
@@ -115,7 +121,4 @@ def generate_custom_split_srt(
     )
 
     logger.info("SRT Successfully Generated.")
-    print(format_divider())
-    print(f"Success! Custom SRT saved as: {output_path}")
-    print(f"Saved to: {final_output}")
     print(format_divider())

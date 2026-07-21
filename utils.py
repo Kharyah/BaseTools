@@ -1,6 +1,6 @@
 from pathlib import Path
 
-TERMINAL_WIDTH = 40  # Global terminal styling constant
+TERMINAL_WIDTH = 60  # Global terminal styling constant
 
 
 def get_app_data_dir() -> Path:

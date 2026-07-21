@@ -18,7 +18,8 @@ from utils import (
 from scripts.generation import (
     check_audio_format,
     generate_custom_split_srt,
-    get_supported_whisper_languages
+    get_supported_whisper_languages,
+    get_supported_whisper_load_models
 )
 
 from config.settings import (
@@ -40,7 +41,6 @@ def path_media_choice(initial_path: str, media_type: str) -> str:
     from pathlib import Path
 
     logger.info("Started Path Media Select.")
-    print(format_header("Select Path"))
 
     current_path_directory = initial_path
     check_media_format = FUNCTIONS_FORMAT_CHECK_CALL[media_type]
@@ -60,11 +60,13 @@ def path_media_choice(initial_path: str, media_type: str) -> str:
 
         elif file_path.is_dir():
             current_path_directory = file_path
-            clear_terminal()
+            # clear_terminal()
 
 
 def media_downloader() -> None:
     logger.info("Started Media Downloader Logic.")
+
+    print(format_header("Media Downloader"))
 
     if not check_js_runtime():
         return
@@ -73,10 +75,7 @@ def media_downloader() -> None:
     checked_url = None
 
     while True:
-        clear_terminal()
-        print(format_header("Media Downloader"))
-
-        url = input("Enter a URL: ")
+        url = input("Enter a Media URL: ")
         if not url:
             continue
 
@@ -85,7 +84,6 @@ def media_downloader() -> None:
         if not is_valid:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             print(format_divider())
-            prompt_to_continue()
             continue
 
         if is_playlist:
@@ -167,7 +165,23 @@ def srt_generator() -> None:
         initial_path=input_path_base,
         media_type="SRT_PATH"
     )
+    print(format_divider())
 
+    # Load Models
+    load_model_choice = inquirer.select(
+        message=(
+            "Select the load SRT mode"
+            " Base models are recommended."
+            "\nLarger models require significantly"
+            " more CPU, RAM, and GPU resources):"
+        ),
+        choices=[
+            Choice(value=x, name=f"  > {x}")
+            for x in get_supported_whisper_load_models()
+        ]
+    ).execute()
+
+    # Srt Modes
     modes = list(read_path(json_name="srt_modes"))
     choices = [Choice(value=x, name=f"  > {x}") for x in modes]
     choices.append(Choice(value="Return", name="! Return."))
@@ -199,7 +213,7 @@ def srt_generator() -> None:
             srt_mode=mode_choice,
             media_path=file_path,
             output_path=output_path,
-            model_size="base",
+            model_size=load_model_choice,
             language=language_choice,
         )
         prompt_to_continue()

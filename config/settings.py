@@ -1,8 +1,6 @@
 import logging
 
 from utils import (
-    clear_terminal,
-    format_header,
     path_name_replace,
     get_app_data_dir
 )
@@ -205,9 +203,6 @@ def default_input_path_choice(default: str) -> str:
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
 
-    clear_terminal()
-    print(format_header("Select Input Path"))
-
     paths = read_path(json_name="path_file", inner_key=default)
     choices = [Choice(value=x, name=f"  > {x}") for x in paths["inputs"]]
     choices.append(Choice(value="Another", name="! Select another path."))
@@ -235,9 +230,6 @@ def default_output_path_choice(default: str) -> str:
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
 
-    clear_terminal()
-    print(format_header("Select Output Path"))
-
     output_path_data = read_path(json_name="path_file", inner_key=default)
     current_output = output_path_data["output"]
 
@@ -253,10 +245,8 @@ def default_output_path_choice(default: str) -> str:
     ).execute()
 
     if selected == "Another":
-        print(format_header("Select Output Path"))
-
         final_output = inquirer.filepath(
-            message=f"Select the Output {path_name_replace(default)}:",
+            message=f"Select the new Output {path_name_replace(default)}:",
             default=str(Path.home()),
             only_directories=True
         ).execute()
