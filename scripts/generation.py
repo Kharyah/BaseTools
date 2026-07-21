@@ -113,12 +113,18 @@ def generate_custom_split_srt(
     final_output.parent.mkdir(parents=True, exist_ok=True)
 
     # Process transcription segments and export directly to SRT format
-    (
-        result
-        .split_by_length(max_chars=max_chars, max_words=max_words)
-        # highlight_color=None removes all HTML color tags from the SRT output
-        .to_srt_vtt(str(final_output), word_level=False)
-    )
+    try:
+        (
+            result
+            .split_by_length(max_chars=max_chars, max_words=max_words)
+            # highlight_color=None removes all HTML color tags
+            # from the SRT output
+            .to_srt_vtt(str(final_output), word_level=False)
+        )
+    except Exception as e:
+        # Unexpected crashes are also saved to the log file
+        logger.error(f"SRT generation execution failed: {e}")
+        print("\n[ERROR] SRT Generation failed. Check logs for details.")
 
     logger.info("SRT Successfully Generated.")
     print(format_divider())

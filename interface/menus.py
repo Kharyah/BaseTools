@@ -60,7 +60,6 @@ def path_media_choice(initial_path: str, media_type: str) -> str:
 
         elif file_path.is_dir():
             current_path_directory = file_path
-            # clear_terminal()
 
 
 def media_downloader() -> None:
@@ -170,7 +169,7 @@ def srt_generator() -> None:
     # Load Models
     load_model_choice = inquirer.select(
         message=(
-            "Select the load SRT mode"
+            "Select the load SRT model"
             " Base models are recommended."
             "\nLarger models require significantly"
             " more CPU, RAM, and GPU resources):"

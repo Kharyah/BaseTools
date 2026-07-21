@@ -1,11 +1,27 @@
 import logging
 
 from utils import format_divider
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 silent_yt_logger = logging.getLogger("yt_dlp_silent")
 silent_yt_logger.setLevel(logging.CRITICAL)
+
+
+class DownloadLogger:
+    def debug(self, msg):
+        logger.debug(f"[yt-dlp-debug] {msg}")
+        if msg.startswith("[download]"):
+            return  # Safety exit for progressive bar logs
+
+    def warning(self, msg):
+        # Sends warnings directly to the app.log file
+        logger.warning(f"[yt-dlp] {msg}")
+
+    def error(self, msg):
+        # Sends critical errors directly to the app.log file
+        logger.error(f"[yt-dlp] {msg}")
 
 
 def check_url(url: str) -> tuple[bool, bool]:
@@ -51,24 +67,6 @@ def check_url(url: str) -> tuple[bool, bool]:
         print(" " * 50, end="\r")
         logging.error(f"Error checking URL: {exc}")
         return False, False
-
-
-class DownloadLogger:
-    """
-    Redirects yt-dlp internal messages to Python's logging system.
-    """
-    def debug(self, msg):
-        if msg.startswith("[download]"):
-            return  # Safety exit for progressive bar logs
-        logger.debug(f"[yt-dlp-debug] {msg}")
-
-    def warning(self, msg):
-        # Sends warnings directly to the app.log file
-        logging.warning(f"[yt-dlp] {msg}")
-
-    def error(self, msg):
-        # Sends critical errors directly to the app.log file
-        logging.error(f"[yt-dlp] {msg}")
 
 
 def show_progress_percentage(d: dict) -> None:
@@ -120,12 +118,12 @@ def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
     """
 
     ydl_opts = {
-        'outtmpl': str(output_path / "%(title)s.%(ext)s"),
+        'outtmpl': str(output_path / "%(title)s [%(id)s].%(ext)s"),
         'logger': DownloadLogger(),
         'progress_hooks': [show_progress_percentage],
         'quiet': True,
         'no_warnings': True,
-        'noprogress': True
+        'noprogress': True,
     }
 
     if file_type.lower() == 'mp4':
@@ -145,6 +143,31 @@ def get_yt_dlp_options(output_path: str, file_type: str) -> dict:
         raise ValueError(f"Unsupported file type: {file_type}")
 
     return ydl_opts
+
+
+def media_exists(
+    output_path: Path,
+    video_id: str,
+    file_type: str
+) -> bool:
+    """
+    Checks whether a media file with the same video ID and
+    format already exists.
+
+    :param output_path: Directory where downloaded media files are stored.
+    :param video_id: Unique identifier of the video source.
+    :param file_type: Desired media format to check (e.g., MP3, WAV, MP4).
+    :return: True if a matching media file exists, otherwise False.
+    """
+
+    expected_ext = file_type.lower()
+
+    return any(
+        video_id in file.name
+        and file.suffix.lower() == f".{expected_ext}"
+        for file in output_path.iterdir()
+        if file.is_file()
+    )
 
 
 def download_media(url: str, output_path: str, file_type: str) -> bool:
@@ -168,9 +191,15 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
         print(f"[INFO] Destination: {output_path}\n")
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+
+            if media_exists(output_path, info["id"], file_type):
+                print("[INFO] File already exists.")
+                print(format_divider())
+                return True
+
             ydl.download([url])
 
-        logger.info("Media downloaded successfully.")
         print("\n[SUCCESS] Download completed successfully!")
         print(format_divider())
         return True
