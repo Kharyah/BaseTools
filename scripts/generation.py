@@ -1,7 +1,6 @@
 import logging
 
 from pathlib import Path
-from typing import Optional
 from config.settings import read_path
 from utils import format_divider
 
@@ -70,7 +69,7 @@ def _get_whisper_model(model_size: str):
 def generate_custom_split_srt(
     srt_mode: str,
     media_path: str,
-    output_path: Optional[str] = None,
+    output_path: str,
     model_size: str = "base",
     language: str = "pt",
 ) -> None:
@@ -85,6 +84,23 @@ def generate_custom_split_srt(
     max_chars = srt_config["max_chars"]
     max_words = srt_config["max_words"]
 
+    # If no output path is specified, default to replacing extension with .srt
+    output_path_obj = Path(output_path)
+
+    if output_path_obj.is_dir():
+        final_output = (
+            output_path_obj / f"{media_path_obj.stem}_{language}.srt"
+        )
+    else:
+        final_output = output_path_obj
+
+    # Checks if the file already exists
+    if final_output.exists():
+        print(format_divider())
+        print("[INFO] File already exists.")
+        print(format_divider())
+        return True
+
     print(f"\n[INFO] Transcribing: {media_path_obj.name}")
 
     result = model.transcribe(
@@ -95,16 +111,6 @@ def generate_custom_split_srt(
         # Disables half-precision to ensure CPU compatibility and stability
         fp16=False
     )
-
-    # If no output path is specified, default to replacing extension with .srt
-    if output_path is None:
-        final_output = media_path_obj.with_suffix(".srt")
-    else:
-        output_path_obj = Path(output_path)
-        if output_path_obj.is_dir():
-            final_output = output_path_obj / f"{media_path_obj.stem}.srt"
-        else:
-            final_output = output_path_obj
 
     print(
         f"Splitting subtitles (Max words: {max_words},"

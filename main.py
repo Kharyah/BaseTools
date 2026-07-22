@@ -21,8 +21,8 @@ CALL_FUNCTIONS_MAIN = {
 }
 MENU_CHOICES = (
     Choice(value="Media Downloader", name="  > Download Media with yt-dlp."),
-    Choice(value="Image Converter", name="  > Convert Images."),
     Choice(value="Srt Generator", name="  > Generate srt files."),
+    Choice(value="Image Converter", name="  > Convert Images."),
     Choice(value="Exit", name="! Exit.")
 )
 

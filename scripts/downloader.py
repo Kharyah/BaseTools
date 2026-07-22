@@ -194,6 +194,7 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
             info = ydl.extract_info(url, download=False)
 
             if media_exists(output_path, info["id"], file_type):
+                print(format_divider())
                 print("[INFO] File already exists.")
                 print(format_divider())
                 return True

@@ -26,7 +26,7 @@ def convert_image_format(
     input_path: str,
     output_dir: str,
     target_format: str
-) -> None:
+) -> bool:
     """
     Converts an image to a target format and saves
     it into the specified output directory.
@@ -61,6 +61,14 @@ def convert_image_format(
 
             # Ensure the output directory exists
             output_dir_obj.mkdir(parents=True, exist_ok=True)
+
+            # Checks if the file already exists
+            if final_output_path.exists():
+                print(format_divider())
+                print("[INFO] File already exists.")
+                print(format_divider())
+                return True
+
             img.save(final_output_path, format=target_format)
 
     except IOError as e:
