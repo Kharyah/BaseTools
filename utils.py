@@ -38,11 +38,11 @@ def path_name_replace(path_name: str) -> str:
     return path_name.replace("_", " ").title()
 
 
-def format_header(title: str, width: int = TERMINAL_WIDTH) -> str:
+def print_header(title: str, width: int = TERMINAL_WIDTH) -> print:
     """Generates a centered header with hyphen padding."""
-    return f" {title} ".center(width, "-")
+    return print(f" {title} ".center(width, "-"))
 
 
-def format_divider(char: str = "-", width: int = TERMINAL_WIDTH) -> str:
+def print_divider(char: str = "-", width: int = TERMINAL_WIDTH) -> print:
     """Generates a clean dividing line with the same width as the headers."""
-    return char * width
+    return print(char * width)

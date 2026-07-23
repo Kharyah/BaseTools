@@ -1,7 +1,7 @@
 import logging
 
 from pathlib import Path
-from utils import format_divider
+from utils import print_divider
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +64,9 @@ def convert_image_format(
 
             # Checks if the file already exists
             if final_output_path.exists():
-                print(format_divider())
+                print_divider()
                 print("[INFO] File already exists.")
-                print(format_divider())
+                print_divider()
                 return True
 
             img.save(final_output_path, format=target_format)
@@ -77,7 +77,7 @@ def convert_image_format(
 
     logger.info("Image converted successfully.")
 
-    print(format_divider())
+    print_divider()
     print(f"Image successfully converted to {target_format}.")
     print(f"Saved to: {final_output_path}")
-    print(format_divider())
+    print_divider()

@@ -1,6 +1,6 @@
 import logging
 
-from utils import format_divider
+from utils import print_divider
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -185,7 +185,7 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
     try:
         ydl_opts = get_yt_dlp_options(output_path, file_type)
 
-        print(format_divider())
+        print_divider()
         print("[INFO] Extracting metadata and initiating download...")
         print(f"[INFO] Target Format: {file_type.upper()} (Best Quality)")
         print(f"[INFO] Destination: {output_path}\n")
@@ -193,16 +193,17 @@ def download_media(url: str, output_path: str, file_type: str) -> bool:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
+            # Checks if the file already exists
             if media_exists(output_path, info["id"], file_type):
-                print(format_divider())
+                print_divider()
                 print("[INFO] File already exists.")
-                print(format_divider())
+                print_divider()
                 return True
 
             ydl.download([url])
 
         print("\n[SUCCESS] Download completed successfully!")
-        print(format_divider())
+        print_divider()
         return True
 
     except Exception as e:

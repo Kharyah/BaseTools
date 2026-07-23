@@ -2,7 +2,7 @@ import logging
 
 from pathlib import Path
 from config.settings import read_path
-from utils import format_divider
+from utils import print_divider
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def _get_whisper_model(model_size: str):
         )
         return _whisper_model_cache["instance"]
 
-    print(format_divider())
+    print_divider()
     print(f"[INFO] Loading Whisper model '{model_size}' into memory...")
     print("[INFO] This might take a few seconds on the first run...")
 
@@ -96,9 +96,9 @@ def generate_custom_split_srt(
 
     # Checks if the file already exists
     if final_output.exists():
-        print(format_divider())
+        print_divider()
         print("[INFO] File already exists.")
-        print(format_divider())
+        print_divider()
         return True
 
     print(f"\n[INFO] Transcribing: {media_path_obj.name}")
@@ -133,4 +133,4 @@ def generate_custom_split_srt(
         print("\n[ERROR] SRT Generation failed. Check logs for details.")
 
     logger.info("SRT Successfully Generated.")
-    print(format_divider())
+    print_divider()

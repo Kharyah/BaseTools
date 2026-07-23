@@ -10,8 +10,8 @@ from config.dependencies import check_js_runtime
 from utils import (
     clear_terminal,
     prompt_to_continue,
-    format_header,
-    format_divider,
+    print_header,
+    print_divider,
     path_name_replace
 )
 
@@ -65,7 +65,7 @@ def path_media_choice(initial_path: str, media_type: str) -> str:
 def media_downloader() -> None:
     logger.info("Started Media Downloader Logic.")
 
-    print(format_header("Media Downloader"))
+    print_header("Media Downloader")
 
     if not check_js_runtime():
         return
@@ -82,7 +82,7 @@ def media_downloader() -> None:
 
         if not is_valid:
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
-            print(format_divider())
+            print_divider()
             continue
 
         if is_playlist:
@@ -123,7 +123,7 @@ def media_downloader() -> None:
 
 def image_converter() -> None:
     logger.info("Started Image Converter Logic.")
-    print(format_header("Image Converter"))
+    print_header("Image Converter")
 
     output_path = default_output_path_choice("IMAGE_PATH")
     input_path_base = default_input_path_choice("IMAGE_PATH")
@@ -155,7 +155,7 @@ def image_converter() -> None:
 
 def srt_generator() -> None:
     logger.info("Started Srt Generator Logic.")
-    print(format_header("SRT Generator"))
+    print_header("SRT Generator")
 
     output_path = default_output_path_choice("SRT_PATH")
     input_path_base = default_input_path_choice("SRT_PATH")
@@ -164,7 +164,7 @@ def srt_generator() -> None:
         initial_path=input_path_base,
         media_type="SRT_PATH"
     )
-    print(format_divider())
+    print_divider()
 
     # Load Models
     load_model_choice = inquirer.select(
