@@ -81,6 +81,7 @@ def media_downloader() -> None:
         is_valid, is_playlist = check_url(url)
 
         if not is_valid:
+            print_divider()
             print("Error: Invalid URL or not supported by yt-dlp. Try again.")
             print_divider()
             continue

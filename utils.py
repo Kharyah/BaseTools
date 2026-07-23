@@ -17,21 +17,25 @@ def clear_terminal() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def prompt_to_continue() -> None:
+def prompt_to_continue() -> bool:
     """Create a follow-up or exit question."""
     import sys
 
-    choice = input(
-        "Press Enter to continue or 'q' to exit... "
-    ).strip().lower()
+    while True:
+        choice = input(
+            "Press Enter to continue or 'q' to exit... "
+        ).strip().lower()
 
-    if choice == "q":
-        clear_terminal()
-        print("BaseTools was closed!")
-        sys.exit(0)
+        if choice == "":
+            return True
 
-        return False
-    return True
+        if choice == "q":
+            clear_terminal()
+            print("BaseTools was closed!")
+            sys.exit(0)
+
+        print_divider()
+        print("Invalid option. Press Enter to continue or 'q' to exit.")
 
 
 def path_name_replace(path_name: str) -> str:
